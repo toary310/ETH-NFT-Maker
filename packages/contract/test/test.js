@@ -24,7 +24,7 @@ describe("Web3Mint", function () {
     await expect(
       mintContract.connect(user1).makeAnEpicNFT(testURI, { value: mintPrice })
     ).to.emit(mintContract, "NFTMinted")
-      .withArgs(1, user1.address, testURI);
+      .withArgs(1, user1.address, testURI, testURI); // 4個の引数に修正
 
     // NFTの所有者とURIを確認
     expect(await mintContract.ownerOf(1)).to.equal(user1.address);
@@ -42,5 +42,29 @@ describe("Web3Mint", function () {
     expect(await mintContract.mintPrice()).to.equal(ethers.parseEther("0.001"));
     expect(await mintContract.MAX_SUPPLY()).to.equal(10000);
     expect(await mintContract.mintingEnabled()).to.equal(true);
+  });
+
+  it("Should mint IPFS NFT correctly", async function () {
+    const testName = "Legacy Test IPFS NFT";
+    const testDescription = "This is a legacy test for IPFS functionality";
+    const testIPFSHash = "QmTestLegacyIPFSHash";
+    const mintPrice = await mintContract.mintPrice();
+    
+    // IPFS NFTをミント
+    await expect(
+      mintContract.connect(user1).mintIpfsNFT(testName, testDescription, testIPFSHash, { value: mintPrice })
+    ).to.emit(mintContract, "IPFSNFTMinted")
+      .withArgs(1, user1.address, testIPFSHash);
+
+    // NFT情報を確認
+    const nftInfo = await mintContract.getNFTInfo(1);
+    expect(nftInfo.name).to.equal(testName);
+    expect(nftInfo.description).to.equal(testDescription);
+    expect(nftInfo.imageURI).to.equal(`ipfs://${testIPFSHash}`);
+    expect(nftInfo.minter).to.equal(user1.address);
+    
+    // 所有者を確認
+    expect(await mintContract.ownerOf(1)).to.equal(user1.address);
+    expect(await mintContract.totalSupply()).to.equal(1);
   });
 });
