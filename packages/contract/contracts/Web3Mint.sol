@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.27;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -10,13 +10,14 @@ import "hardhat/console.sol";
  * @title Web3Mint
  * @author UNCHAIN ETH-NFT-Maker Team
  * @notice NFTを作成・ミントするためのスマートコントラクト
- * @dev OpenZeppelin v5.3.0に対応したERC721実装
+ * @dev OpenZeppelin v5.3.0に対応したERC721実装（Solidity 0.8.28対応）
  * 
  * 主な機能:
  * - NFTの安全なミント
  * - トークンURIの設定
  * - 所有者限定機能
  * - リエントランシー攻撃の防止
+ * - Solidity 0.8.28の最新機能を活用
  */
 contract Web3Mint is ERC721URIStorage, Ownable, ReentrancyGuard {
     /// @notice 次にミントされるトークンのID
@@ -48,6 +49,7 @@ contract Web3Mint is ERC721URIStorage, Ownable, ReentrancyGuard {
      */
     constructor() ERC721("TanyaNFT", "TANYA") Ownable(msg.sender) {
         console.log("Web3Mint NFT contract deployed by:", msg.sender);
+        console.log("Solidity version: 0.8.28");
         _tokenIdCounter = 1; // トークンIDを1から開始
     }
 
