@@ -47,7 +47,7 @@ async function main() {
     console.log(`  現在の総供給量: ${totalSupply}`);
     
     // テスト用のメタデータURI
-    const testTokenURIs = [
+    const testMetadataURIs = [
       "https://example.com/metadata/1.json",
       "https://example.com/metadata/2.json",
       "https://example.com/metadata/3.json"
@@ -57,14 +57,14 @@ async function main() {
     
     // Owner用無料ミント
     console.log("\n1️⃣ Owner用無料ミント:");
-    let txn = await nftContract.ownerMint(await owner.getAddress(), testTokenURIs[0]);
+    let txn = await nftContract.ownerMint(await owner.getAddress(), testMetadataURIs[0]);
     await txn.wait();
     console.log(`  ✅ Owner NFT #1 がミントされました`);
     console.log(`  📋 Transaction: ${txn.hash}`);
     
     // User1の有料ミント（正常ケース）
     console.log("\n2️⃣ User1の有料ミント:");
-    const mintTx1 = await nftContract.connect(user1).makeAnEpicNFT(testTokenURIs[1], {
+    const mintTx1 = await nftContract.connect(user1).makeAnEpicNFT(testMetadataURIs[1], {
       value: mintPrice
     });
     await mintTx1.wait();
@@ -73,7 +73,7 @@ async function main() {
     
     // User2の有料ミント（正常ケース）
     console.log("\n3️⃣ User2の有料ミント:");
-    const mintTx2 = await nftContract.connect(user2).makeAnEpicNFT(testTokenURIs[2], {
+    const mintTx2 = await nftContract.connect(user2).makeAnEpicNFT(testMetadataURIs[2], {
       value: mintPrice
     });
     await mintTx2.wait();
@@ -91,8 +91,8 @@ async function main() {
       console.log(`  ✅ 期待通りエラー: ${error.message.includes("InsufficientPayment") ? "InsufficientPayment" : "Payment error"}`);
     }
     
-    // エラーテスト：空のトークンURI
-    console.log("\n5️⃣ エラーテスト - 空のトークンURI:");
+    // エラーテスト：空のメタデータURI
+    console.log("\n5️⃣ エラーテスト - 空のメタデータURI:");
     try {
       await nftContract.connect(user1).makeAnEpicNFT("", {
         value: mintPrice
