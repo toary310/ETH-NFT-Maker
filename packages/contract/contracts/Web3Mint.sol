@@ -33,7 +33,7 @@ contract Web3Mint is ERC721URIStorage, Ownable, ReentrancyGuard {
     bool public mintingEnabled = true;
 
     /// @dev イベント定義
-    event NFTMinted(uint256 indexed tokenId, address indexed minter, string tokenURI);
+    event NFTMinted(uint256 indexed tokenId, address indexed minter, string metadataURI);
     event MintingToggled(bool enabled);
     event MintPriceUpdated(uint256 newPrice);
 
@@ -55,20 +55,20 @@ contract Web3Mint is ERC721URIStorage, Ownable, ReentrancyGuard {
 
     /**
      * @notice NFTをミントする
-     * @param tokenURI NFTのメタデータURI
+     * @param metadataURI NFTのメタデータURI
      * @dev リエントランシー攻撃を防ぐためにnonReentrantを使用
      */
-    function makeAnEpicNFT(string memory tokenURI) public payable nonReentrant {
+    function makeAnEpicNFT(string memory metadataURI) public payable nonReentrant {
         if (!mintingEnabled) revert MintingDisabled();
         if (_tokenIdCounter > MAX_SUPPLY) revert MaxSupplyExceeded();
         if (msg.value < mintPrice) revert InsufficientPayment();
-        if (bytes(tokenURI).length == 0) revert InvalidTokenURI();
+        if (bytes(metadataURI).length == 0) revert InvalidTokenURI();
 
         uint256 tokenId = _tokenIdCounter;
         
         // NFTをミント
         _safeMint(msg.sender, tokenId);
-        _setTokenURI(tokenId, tokenURI);
+        _setTokenURI(tokenId, metadataURI);
         
         // トークンIDを増加
         _tokenIdCounter++;
@@ -77,29 +77,29 @@ contract Web3Mint is ERC721URIStorage, Ownable, ReentrancyGuard {
             "NFT minted! ID: %s, Minter: %s, URI: %s",
             tokenId,
             msg.sender,
-            tokenURI
+            metadataURI
         );
         
-        emit NFTMinted(tokenId, msg.sender, tokenURI);
+        emit NFTMinted(tokenId, msg.sender, metadataURI);
     }
 
     /**
      * @notice 所有者専用：無料でNFTをミント（テスト用）
      * @param to ミント先アドレス
-     * @param tokenURI NFTのメタデータURI
+     * @param metadataURI NFTのメタデータURI
      */
-    function ownerMint(address to, string memory tokenURI) public onlyOwner nonReentrant {
+    function ownerMint(address to, string memory metadataURI) public onlyOwner nonReentrant {
         if (_tokenIdCounter > MAX_SUPPLY) revert MaxSupplyExceeded();
-        if (bytes(tokenURI).length == 0) revert InvalidTokenURI();
+        if (bytes(metadataURI).length == 0) revert InvalidTokenURI();
 
         uint256 tokenId = _tokenIdCounter;
         
         _safeMint(to, tokenId);
-        _setTokenURI(tokenId, tokenURI);
+        _setTokenURI(tokenId, metadataURI);
         
         _tokenIdCounter++;
         
-        emit NFTMinted(tokenId, to, tokenURI);
+        emit NFTMinted(tokenId, to, metadataURI);
     }
 
     /**
