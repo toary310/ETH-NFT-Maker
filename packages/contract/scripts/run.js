@@ -2,34 +2,34 @@ const hre = require("hardhat");
 const { ethers } = hre;
 
 /**
- * Web3Mint NFT コントラクトのローカル実行・テストスクリプト（IPFS対応版）
+ * Web3Mint NFT contract local test script with IPFS support
  * 
- * 使用方法:
+ * Usage:
  * npx hardhat run scripts/run.js
  */
 async function main() {
   try {
-    console.log("🧪 Web3Mint NFT コントラクト（IPFS対応）のローカルテストを開始します...");
+    console.log("🧪 Starting Web3Mint NFT contract (IPFS supported) local test...");
     
-    // テストアカウントを取得
+    // Get test accounts
     const [owner, user1, user2] = await ethers.getSigners();
     
-    console.log("📋 テストアカウント:");
+    console.log("📋 Test accounts:");
     console.log(`  Owner: ${await owner.getAddress()}`);
     console.log(`  User1: ${await user1.getAddress()}`);
     console.log(`  User2: ${await user2.getAddress()}`);
     
-    // コントラクトをデプロイ
-    console.log("\n📦 Web3Mintコントラクトをデプロイ中...");
+    // Deploy contract
+    console.log("\n📦 Deploying Web3Mint contract...");
     const Web3Mint = await ethers.getContractFactory("Web3Mint");
     const nftContract = await Web3Mint.deploy();
     await nftContract.waitForDeployment();
     
     const contractAddress = await nftContract.getAddress();
-    console.log(`✅ コントラクトアドレス: ${contractAddress}`);
+    console.log(`✅ Contract address: ${contractAddress}`);
     
-    // コントラクトの初期状態を確認
-    console.log("\n🔍 コントラクト情報:");
+    // Check initial contract state
+    console.log("\n🔍 Contract information:");
     const name = await nftContract.name();
     const symbol = await nftContract.symbol();
     const owner_address = await nftContract.owner();
@@ -38,39 +38,39 @@ async function main() {
     const currentTokenId = await nftContract.getCurrentTokenId();
     const totalSupply = await nftContract.totalSupply();
     
-    console.log(`  名前: ${name}`);
-    console.log(`  シンボル: ${symbol}`);
-    console.log(`  所有者: ${owner_address}`);
-    console.log(`  ミント料金: ${ethers.formatEther(mintPrice)} ETH`);
-    console.log(`  最大供給量: ${maxSupply.toString()}`);
-    console.log(`  次のトークンID: ${currentTokenId.toString()}`);
-    console.log(`  現在の総供給量: ${totalSupply.toString()}`);
+    console.log(`  Name: ${name}`);
+    console.log(`  Symbol: ${symbol}`);
+    console.log(`  Owner: ${owner_address}`);
+    console.log(`  Mint price: ${ethers.formatEther(mintPrice)} ETH`);
+    console.log(`  Max supply: ${maxSupply.toString()}`);
+    console.log(`  Next token ID: ${currentTokenId.toString()}`);
+    console.log(`  Current total supply: ${totalSupply.toString()}`);
     
-    // テスト用のメタデータURI
+    // Test metadata URIs
     const testMetadataURIs = [
       "https://example.com/metadata/1.json",
       "https://example.com/metadata/2.json",
       "https://example.com/metadata/3.json"
     ];
 
-    // テスト用のIPFSハッシュ
+    // Test IPFS hashes
     const testIPFSHashes = [
       "QmYFNwqT8eZ6FybqwYS8e1X2Zl5TQaB3hMxRbC7PvKdUfG",
       "QmTWZGnCyQ9Xx4YvFpKhJe8MzLqNfPsRnK5WGbHdT6VcAe",
       "QmDxMnKyH5fYQ3vFgCsLwT9WjPr6XeGcV4RoE2KyUpNzB8"
     ];
     
-    console.log("\n🎨 NFTミントテストを開始...");
+    console.log("\n🎨 Starting NFT minting tests...");
     
-    // 1. 従来の方法でのNFTミント
-    console.log("\n1️⃣ 従来方式でのNFTミント:");
+    // 1. Traditional NFT minting
+    console.log("\n1️⃣ Traditional NFT minting:");
     let txn = await nftContract.ownerMint(await owner.getAddress(), testMetadataURIs[0]);
     await txn.wait();
-    console.log(`  ✅ 従来方式NFT #1 がミントされました`);
+    console.log(`  ✅ Traditional NFT #1 minted successfully`);
     console.log(`  📋 Transaction: ${txn.hash}`);
     
-    // 2. IPFSを使った有料ミント（User1）
-    console.log("\n2️⃣ IPFS方式でのNFTミント（User1）:");
+    // 2. IPFS paid minting (User1)
+    console.log("\n2️⃣ IPFS NFT minting (User1):");
     const ipfsMintTx1 = await nftContract.connect(user1).mintIpfsNFT(
       "Awesome IPFS NFT #1",
       "This is a cool NFT stored on IPFS with dynamic metadata",
@@ -78,12 +78,12 @@ async function main() {
       { value: mintPrice }
     );
     await ipfsMintTx1.wait();
-    console.log(`  ✅ IPFS NFT #2 がミントされました`);
+    console.log(`  ✅ IPFS NFT #2 minted successfully`);
     console.log(`  📋 Transaction: ${ipfsMintTx1.hash}`);
     console.log(`  🌐 IPFS Hash: ${testIPFSHashes[0]}`);
     
-    // 3. IPFSを使った有料ミント（User2）
-    console.log("\n3️⃣ IPFS方式でのNFTミント（User2）:");
+    // 3. IPFS paid minting (User2)
+    console.log("\n3️⃣ IPFS NFT minting (User2):");
     const ipfsMintTx2 = await nftContract.connect(user2).mintIpfsNFT(
       "Epic IPFS Collection #2",
       "Another amazing NFT with on-chain metadata generation",
@@ -91,12 +91,12 @@ async function main() {
       { value: mintPrice }
     );
     await ipfsMintTx2.wait();
-    console.log(`  ✅ IPFS NFT #3 がミントされました`);
+    console.log(`  ✅ IPFS NFT #3 minted successfully`);
     console.log(`  📋 Transaction: ${ipfsMintTx2.hash}`);
     console.log(`  🌐 IPFS Hash: ${testIPFSHashes[1]}`);
     
-    // 4. Owner用IPFS無料ミント
-    console.log("\n4️⃣ Owner用IPFS無料ミント:");
+    // 4. Owner IPFS free minting
+    console.log("\n4️⃣ Owner IPFS free minting:");
     const ownerIpfsTx = await nftContract.ownerMintIpfs(
       await owner.getAddress(),
       "Special Owner NFT",
@@ -104,11 +104,11 @@ async function main() {
       testIPFSHashes[2]
     );
     await ownerIpfsTx.wait();
-    console.log(`  ✅ Owner IPFS NFT #4 がミントされました`);
+    console.log(`  ✅ Owner IPFS NFT #4 minted successfully`);
     console.log(`  📋 Transaction: ${ownerIpfsTx.hash}`);
     
-    // 5. エラーテスト：空の名前でIPFSミント
-    console.log("\n5️⃣ エラーテスト - 空の名前でIPFSミント:");
+    // 5. Error test: IPFS minting with empty name
+    console.log("\n5️⃣ Error test - IPFS minting with empty name:");
     try {
       await nftContract.connect(user1).mintIpfsNFT(
         "",
@@ -116,13 +116,13 @@ async function main() {
         testIPFSHashes[0],
         { value: mintPrice }
       );
-      console.log("  ❌ エラーが発生するはずでした");
+      console.log("  ❌ Error should have occurred");
     } catch (error) {
-      console.log(`  ✅ 期待通りエラー: ${error.message.includes("EmptyName") ? "EmptyName" : "Name error"}`);
+      console.log(`  ✅ Expected error: ${error.message.includes("EmptyName") ? "EmptyName" : "Name error"}`);
     }
     
-    // 6. エラーテスト：無効なIPFSハッシュ
-    console.log("\n6️⃣ エラーテスト - 無効なIPFSハッシュ:");
+    // 6. Error test: Invalid IPFS hash
+    console.log("\n6️⃣ Error test - Invalid IPFS hash:");
     try {
       await nftContract.connect(user1).mintIpfsNFT(
         "Valid Name",
@@ -130,72 +130,72 @@ async function main() {
         "",
         { value: mintPrice }
       );
-      console.log("  ❌ エラーが発生するはずでした");
+      console.log("  ❌ Error should have occurred");
     } catch (error) {
-      console.log(`  ✅ 期待通りエラー: ${error.message.includes("InvalidIPFSHash") ? "InvalidIPFSHash" : "IPFS error"}`);
+      console.log(`  ✅ Expected error: ${error.message.includes("InvalidIPFSHash") ? "InvalidIPFSHash" : "IPFS error"}`);
     }
     
-    // 7. NFT情報とメタデータの確認
-    console.log("\n🔍 NFT情報とメタデータの確認:");
+    // 7. NFT information and metadata verification
+    console.log("\n🔍 NFT information and metadata verification:");
     for (let i = 1; i <= 4; i++) {
       try {
         const tokenOwner = await nftContract.ownerOf(i);
         const tokenURI = await nftContract.tokenURI(i);
         console.log(`\n  Token #${i}:`);
-        console.log(`    所有者: ${tokenOwner}`);
+        console.log(`    Owner: ${tokenOwner}`);
         
-        // IPFS NFTの場合、NFT情報も表示
+        // For IPFS NFTs, display NFT information
         if (i >= 2) {
           const nftInfo = await nftContract.getNFTInfo(i);
-          console.log(`    名前: ${nftInfo.name}`);
-          console.log(`    説明: ${nftInfo.description}`);
-          console.log(`    画像URI: ${nftInfo.imageURI}`);
-          console.log(`    ミンター: ${nftInfo.minter}`);
-          console.log(`    タイムスタンプ: ${nftInfo.timestamp.toString()}`);
+          console.log(`    Name: ${nftInfo.name}`);
+          console.log(`    Description: ${nftInfo.description}`);
+          console.log(`    Image URI: ${nftInfo.imageURI}`);
+          console.log(`    Minter: ${nftInfo.minter}`);
+          console.log(`    Timestamp: ${nftInfo.timestamp.toString()}`);
         }
         
-        // メタデータURIの先頭部分を表示
+        // Display metadata URI preview
         const uriPreview = tokenURI.length > 100 ? 
           tokenURI.substring(0, 100) + "..." : tokenURI;
-        console.log(`    メタデータURI: ${uriPreview}`);
+        console.log(`    Metadata URI: ${uriPreview}`);
         
-        // data:application/json;base64の場合、Base64デコードを試行
+        // Try to decode Base64 for data:application/json;base64
         if (tokenURI.startsWith("data:application/json;base64,")) {
           try {
             const base64Data = tokenURI.split(",")[1];
             const jsonData = Buffer.from(base64Data, 'base64').toString('utf8');
             const metadata = JSON.parse(jsonData);
-            console.log(`    デコードされたメタデータ:`);
-            console.log(`      名前: ${metadata.name}`);
-            console.log(`      説明: ${metadata.description}`);
-            console.log(`      画像: ${metadata.image}`);
+            console.log(`    Decoded metadata:`);
+            console.log(`      Name: ${metadata.name}`);
+            console.log(`      Description: ${metadata.description}`);
+            console.log(`      Image: ${metadata.image}`);
           } catch (e) {
-            console.log(`    メタデータのデコードに失敗: ${e.message}`);
+            console.log(`    Failed to decode metadata: ${e.message}`);
           }
         }
       } catch (error) {
-        console.log(`  Token #${i}: 存在しません`);
+        console.log(`  Token #${i}: Does not exist`);
       }
     }
     
-    // 8. 管理者機能のテスト
-    console.log("\n⚙️  管理者機能テスト:");
+    // 8. Admin function tests
+    console.log("\n⚙️  Admin function tests:");
     
-    // ミント価格の変更
+    // Update mint price
     const newPrice = ethers.parseEther("0.002");
     const updatePriceTx = await nftContract.updateMintPrice(newPrice);
     await updatePriceTx.wait();
     const updatedPrice = await nftContract.mintPrice();
-    console.log(`  ✅ ミント価格を更新: ${ethers.formatEther(updatedPrice)} ETH`);
+    console.log(`  ✅ Mint price updated: ${ethers.formatEther(updatedPrice)} ETH`);
     
-    // ミント機能の無効化
+    // Disable minting
     const toggleTx = await nftContract.toggleMinting(false);
     await toggleTx.wait();
     const mintingEnabled = await nftContract.mintingEnabled();
-    console.log(`  ✅ ミント機能を無効化: ${mintingEnabled}`);
+    console.log(`  ✅ Minting disabled: ${mintingEnabled}`);
     
-    // 無効化後のIPFSミントテスト
-    console.log("\n7️⃣ ミント無効化後のIPFSミントテスト:");
+    // Test IPFS minting after disabling
+    console.log("\n7️⃣ IPFS minting test after disabling:");
     try {
       await nftContract.connect(user1).mintIpfsNFT(
         "Should Fail NFT",
@@ -203,51 +203,51 @@ async function main() {
         testIPFSHashes[0],
         { value: newPrice }
       );
-      console.log("  ❌ エラーが発生するはずでした");
+      console.log("  ❌ Error should have occurred");
     } catch (error) {
-      console.log(`  ✅ 期待通りエラー: ${error.message.includes("MintingDisabled") ? "MintingDisabled" : "Minting error"}`);
+      console.log(`  ✅ Expected error: ${error.message.includes("MintingDisabled") ? "MintingDisabled" : "Minting error"}`);
     }
     
-    // ミント機能を再有効化
+    // Re-enable minting
     const reEnableTx = await nftContract.toggleMinting(true);
     await reEnableTx.wait();
-    console.log("  ✅ ミント機能を再有効化");
+    console.log("  ✅ Minting re-enabled");
     
-    // コントラクトの残高確認
+    // Check contract balance
     const contractBalance = await nftContract.getContractBalance();
-    console.log(`\n💰 コントラクト残高: ${ethers.formatEther(contractBalance)} ETH`);
+    console.log(`\n💰 Contract balance: ${ethers.formatEther(contractBalance)} ETH`);
     
-    // 最終状態を確認
+    // Final state verification
     const finalTotalSupply = await nftContract.totalSupply();
     const finalCurrentTokenId = await nftContract.getCurrentTokenId();
     
-    // BigIntを数値に変換してから計算
+    // Convert BigInt to Number for calculation
     const totalSupplyNum = Number(finalTotalSupply);
     const ipfsNFTCount = totalSupplyNum - 1;
     
-    console.log("\n📊 最終状態:");
-    console.log(`  総供給量: ${finalTotalSupply.toString()}`);
-    console.log(`  次のトークンID: ${finalCurrentTokenId.toString()}`);
-    console.log(`  コントラクト残高: ${ethers.formatEther(contractBalance)} ETH`);
-    console.log(`  従来型NFT: 1個`);
-    console.log(`  IPFS NFT: ${ipfsNFTCount}個`);
+    console.log("\n📊 Final state:");
+    console.log(`  Total supply: ${finalTotalSupply.toString()}`);
+    console.log(`  Next token ID: ${finalCurrentTokenId.toString()}`);
+    console.log(`  Contract balance: ${ethers.formatEther(contractBalance)} ETH`);
+    console.log(`  Traditional NFTs: 1`);
+    console.log(`  IPFS NFTs: ${ipfsNFTCount}`);
     
-    console.log("\n🎉 IPFS対応NFTコントラクトのテストが正常に完了しました！");
+    console.log("\n🎉 IPFS-enabled NFT contract tests completed successfully!");
     
   } catch (error) {
-    console.error("\n❌ テスト中にエラーが発生しました:");
+    console.error("\n❌ Error occurred during testing:");
     console.error(error);
     process.exitCode = 1;
   }
 }
 
-// エラーハンドリング付きでmain関数を実行
+// Execute main function with error handling
 const runMain = async () => {
   try {
     await main();
     process.exit(0);
   } catch (error) {
-    console.error("💥 予期しないエラー:", error);
+    console.error("💥 Unexpected error:", error);
     process.exit(1);
   }
 };
