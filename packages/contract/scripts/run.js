@@ -42,9 +42,9 @@ async function main() {
     console.log(`  シンボル: ${symbol}`);
     console.log(`  所有者: ${owner_address}`);
     console.log(`  ミント料金: ${ethers.formatEther(mintPrice)} ETH`);
-    console.log(`  最大供給量: ${maxSupply}`);
-    console.log(`  次のトークンID: ${currentTokenId}`);
-    console.log(`  現在の総供給量: ${totalSupply}`);
+    console.log(`  最大供給量: ${maxSupply.toString()}`);
+    console.log(`  次のトークンID: ${currentTokenId.toString()}`);
+    console.log(`  現在の総供給量: ${totalSupply.toString()}`);
     
     // テスト用のメタデータURI
     const testMetadataURIs = [
@@ -151,7 +151,7 @@ async function main() {
           console.log(`    説明: ${nftInfo.description}`);
           console.log(`    画像URI: ${nftInfo.imageURI}`);
           console.log(`    ミンター: ${nftInfo.minter}`);
-          console.log(`    タイムスタンプ: ${nftInfo.timestamp}`);
+          console.log(`    タイムスタンプ: ${nftInfo.timestamp.toString()}`);
         }
         
         // メタデータURIの先頭部分を表示
@@ -221,12 +221,16 @@ async function main() {
     const finalTotalSupply = await nftContract.totalSupply();
     const finalCurrentTokenId = await nftContract.getCurrentTokenId();
     
+    // BigIntを数値に変換してから計算
+    const totalSupplyNum = Number(finalTotalSupply);
+    const ipfsNFTCount = totalSupplyNum - 1;
+    
     console.log("\n📊 最終状態:");
-    console.log(`  総供給量: ${finalTotalSupply}`);
-    console.log(`  次のトークンID: ${finalCurrentTokenId}`);
+    console.log(`  総供給量: ${finalTotalSupply.toString()}`);
+    console.log(`  次のトークンID: ${finalCurrentTokenId.toString()}`);
     console.log(`  コントラクト残高: ${ethers.formatEther(contractBalance)} ETH`);
     console.log(`  従来型NFT: 1個`);
-    console.log(`  IPFS NFT: ${finalTotalSupply - 1}個`);
+    console.log(`  IPFS NFT: ${ipfsNFTCount}個`);
     
     console.log("\n🎉 IPFS対応NFTコントラクトのテストが正常に完了しました！");
     
