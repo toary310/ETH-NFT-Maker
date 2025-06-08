@@ -62,9 +62,10 @@ ETHERSCAN_API_KEY=your_etherscan_api_key_here
 - ✅ ミント機能の有効/無効切り替え
 
 **技術仕様:**
-- Solidity `^0.8.27`
-- OpenZeppelin `v5.3.0`
-- ERC721URIStorage, Ownable, ReentrancyGuard
+- **Solidity**: `^0.8.28` （最新版）
+- **OpenZeppelin**: `v5.3.0`
+- **継承**: ERC721URIStorage, Ownable, ReentrancyGuard
+- **最適化**: ガス効率、IR有効化
 
 ## 🛠 使用方法
 
@@ -161,6 +162,15 @@ await contract.ownerMint(address, "https://metadata-uri.json");
 await contract.withdraw();
 ```
 
+## ⚡ Solidity 0.8.28の新機能
+
+このプロジェクトでは最新のSolidity 0.8.28を使用しており、以下の利点があります：
+
+- **パフォーマンス向上**: コンパイラの最適化改善
+- **ガス効率**: より効率的なバイトコード生成
+- **セキュリティ強化**: 最新のセキュリティパッチ
+- **開発体験**: より良いエラーメッセージとデバッグ機能
+
 ## 🔗 便利なリンク
 
 - [Alchemy Dashboard](https://dashboard.alchemy.com/)
@@ -168,6 +178,7 @@ await contract.withdraw();
 - [Sepolia Etherscan](https://sepolia.etherscan.io/)
 - [MetaMask](https://metamask.io/)
 - [OpenZeppelin Contracts](https://docs.openzeppelin.com/contracts/)
+- [Solidity 0.8.28 Documentation](https://docs.soliditylang.org/)
 
 ## 🚨 セキュリティ注意事項
 
@@ -175,6 +186,7 @@ await contract.withdraw();
 2. **テストネット使用**: 本番前は必ずSepoliaでテストしてください
 3. **コントラクト認証**: デプロイ後はEtherscanで認証を行ってください
 4. **権限管理**: 所有者権限は適切に管理してください
+5. **最新版維持**: Solidityとライブラリを最新に保ってください
 
 ## 📞 サポート
 
@@ -184,7 +196,8 @@ await contract.withdraw();
 2. SepoliaネットワークにテストETHがあるか
 3. Alchemy APIキーが有効か
 4. 依存関係が正しくインストールされているか
+5. Solidity 0.8.28のコンパイラが使用されているか
 
 ---
 
-**Happy Building! 🚀**
+**Happy Building with Solidity 0.8.28! 🚀**
