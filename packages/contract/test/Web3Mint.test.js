@@ -45,7 +45,7 @@ describe("Web3Mint", function () {
       await expect(
         web3Mint.connect(user1).makeAnEpicNFT(testURI, { value: mintPrice })
       ).to.emit(web3Mint, "NFTMinted")
-        .withArgs(1, user1.address, testURI);
+        .withArgs(1, user1.address, testURI, testURI); // 4個の引数に修正
 
       expect(await web3Mint.ownerOf(1)).to.equal(user1.address);
       expect(await web3Mint.tokenURI(1)).to.equal(testURI);
@@ -78,16 +78,75 @@ describe("Web3Mint", function () {
     });
   });
 
+  describe("IPFS Minting", function () {
+    const testName = "Test IPFS NFT";
+    const testDescription = "This is a test IPFS NFT";
+    const testIPFSHash = "QmYFNwqT8eZ6FybqwYS8e1X2Zl5TQaB3hMxRbC7PvKdUfG";
+
+    it("Should mint IPFS NFT with correct payment", async function () {
+      const mintPrice = await web3Mint.mintPrice();
+      
+      await expect(
+        web3Mint.connect(user1).mintIpfsNFT(testName, testDescription, testIPFSHash, { value: mintPrice })
+      ).to.emit(web3Mint, "IPFSNFTMinted")
+        .withArgs(1, user1.address, testIPFSHash);
+
+      expect(await web3Mint.ownerOf(1)).to.equal(user1.address);
+      
+      const nftInfo = await web3Mint.getNFTInfo(1);
+      expect(nftInfo.name).to.equal(testName);
+      expect(nftInfo.description).to.equal(testDescription);
+      expect(nftInfo.imageURI).to.equal(`ipfs://${testIPFSHash}`);
+      expect(nftInfo.minter).to.equal(user1.address);
+    });
+
+    it("Should fail with empty name", async function () {
+      const mintPrice = await web3Mint.mintPrice();
+      
+      await expect(
+        web3Mint.connect(user1).mintIpfsNFT("", testDescription, testIPFSHash, { value: mintPrice })
+      ).to.be.revertedWithCustomError(web3Mint, "EmptyName");
+    });
+
+    it("Should fail with empty description", async function () {
+      const mintPrice = await web3Mint.mintPrice();
+      
+      await expect(
+        web3Mint.connect(user1).mintIpfsNFT(testName, "", testIPFSHash, { value: mintPrice })
+      ).to.be.revertedWithCustomError(web3Mint, "EmptyDescription");
+    });
+
+    it("Should fail with empty IPFS hash", async function () {
+      const mintPrice = await web3Mint.mintPrice();
+      
+      await expect(
+        web3Mint.connect(user1).mintIpfsNFT(testName, testDescription, "", { value: mintPrice })
+      ).to.be.revertedWithCustomError(web3Mint, "InvalidIPFSHash");
+    });
+  });
+
   describe("Owner functions", function () {
     const testURI = "https://example.com/metadata/owner.json";
+    const testIPFSHash = "QmTestOwnerIPFSHash";
 
     it("Should allow owner to mint for free", async function () {
       await expect(
         web3Mint.ownerMint(user1.address, testURI)
       ).to.emit(web3Mint, "NFTMinted")
-        .withArgs(1, user1.address, testURI);
+        .withArgs(1, user1.address, testURI, testURI); // 4個の引数に修正
 
       expect(await web3Mint.ownerOf(1)).to.equal(user1.address);
+    });
+
+    it("Should allow owner to mint IPFS for free", async function () {
+      await expect(
+        web3Mint.ownerMintIpfs(user1.address, "Owner IPFS NFT", "Special NFT", testIPFSHash)
+      ).to.emit(web3Mint, "IPFSNFTMinted")
+        .withArgs(1, user1.address, testIPFSHash);
+
+      const nftInfo = await web3Mint.getNFTInfo(1);
+      expect(nftInfo.name).to.equal("Owner IPFS NFT");
+      expect(nftInfo.imageURI).to.equal(`ipfs://${testIPFSHash}`);
     });
 
     it("Should allow owner to update mint price", async function () {
