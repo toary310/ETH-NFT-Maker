@@ -525,48 +525,51 @@ export const isDevelopment = () => {
 };
 
 /**
- * GemcaseコレクションページのURLを生成
+ * NFTマーケットプレイスのURLを生成
  */
-export const getGemcaseCollectionUrl = (contractAddress, networkName = 'sepolia') => {
-  console.log('🔍 Gemcase URL generation debug:');
+export const getNFTMarketplaceUrls = (contractAddress, networkName = 'sepolia') => {
+  console.log('🔍 NFT Marketplace URL generation:');
   console.log(`   Contract Address: ${contractAddress}`);
   console.log(`   Network Name: ${networkName}`);
 
   if (!contractAddress) {
-    console.warn('⚠️ Contract address not provided for Gemcase URL');
+    console.warn('⚠️ Contract address not provided for marketplace URLs');
     return null;
   }
 
-  // ネットワーク名をGemcase形式に変換
-  const networkMap = {
-    'sepolia': 'sepolia',
-    'mainnet': 'ethereum',
-    'ethereum': 'ethereum',
-    'polygon': 'polygon',
-    'arbitrum': 'arbitrum'
+  const network = networkName.toLowerCase();
+
+  // OpenSea URLs (より確実)
+  const openSeaUrls = {
+    'sepolia': `https://testnets.opensea.io/collection/unidentified-contract-${contractAddress.toLowerCase()}`,
+    'mainnet': `https://opensea.io/collection/unidentified-contract-${contractAddress.toLowerCase()}`,
+    'ethereum': `https://opensea.io/collection/unidentified-contract-${contractAddress.toLowerCase()}`,
+    'polygon': `https://opensea.io/collection/unidentified-contract-${contractAddress.toLowerCase()}`
   };
 
-  const gemcaseNetwork = networkMap[networkName.toLowerCase()] || 'sepolia';
-
-  // 複数のURL形式を試す
-  const possibleUrls = [
-    `https://gemcase.vercel.app/collection/${gemcaseNetwork}/${contractAddress}`,
-    `https://gemcase.vercel.app/collections/${gemcaseNetwork}/${contractAddress}`,
-    `https://gemcase.vercel.app/${gemcaseNetwork}/collection/${contractAddress}`,
-    `https://gemcase.vercel.app/nft/${gemcaseNetwork}/${contractAddress}`,
-    `https://gemcase.vercel.app/contract/${gemcaseNetwork}/${contractAddress}`
+  // Gemcase URLs
+  const gemcaseUrls = [
+    `https://gemcase.vercel.app/collection/${network}/${contractAddress}`,
+    `https://gemcase.vercel.app/collections/${network}/${contractAddress}`,
+    `https://gemcase.vercel.app/${network}/collection/${contractAddress}`
   ];
 
-  const primaryUrl = possibleUrls[0];
-
-  console.log(`🔗 Primary Gemcase URL: ${primaryUrl}`);
-  console.log(`   Network mapping: ${networkName} -> ${gemcaseNetwork}`);
-  console.log(`🔄 Alternative URLs available:`, possibleUrls.slice(1));
-
-  return {
-    primary: primaryUrl,
-    alternatives: possibleUrls.slice(1)
+  // Etherscan URLs
+  const etherscanUrls = {
+    'sepolia': `https://sepolia.etherscan.io/address/${contractAddress}`,
+    'mainnet': `https://etherscan.io/address/${contractAddress}`,
+    'ethereum': `https://etherscan.io/address/${contractAddress}`
   };
+
+  const result = {
+    opensea: openSeaUrls[network] || openSeaUrls['sepolia'],
+    gemcase: gemcaseUrls,
+    etherscan: etherscanUrls[network] || etherscanUrls['sepolia']
+  };
+
+  console.log(`🔗 Generated marketplace URLs:`, result);
+
+  return result;
 };
 
 /**

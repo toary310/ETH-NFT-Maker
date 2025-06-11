@@ -1,4 +1,3 @@
-import GemcaseButton from '../../GemcaseButton/GemcaseButton';
 import ContractStatus from './ContractStatus';
 import FileUpload from './FileUpload';
 import IpfsStatus from './IpfsStatus';
@@ -99,12 +98,11 @@ const NftUploaderLayout = ({
       {/* IPFSサービス状態 */}
       <IpfsStatus isUsingRealIPFS={isUsingRealIPFS} />
 
-      {/* Gemcaseコレクションボタン（ウォレット接続時のみ） */}
+      {/* NFTマーケットプレイスボタン（ウォレット接続時のみ） */}
       {currentAccount && (
-        <GemcaseButton
+        <MarketplaceButtons
           contractAddress={process.env.REACT_APP_CONTRACT_ADDRESS}
           networkName={process.env.REACT_APP_NETWORK_NAME}
-          fullWidth={true}
           sx={{ margin: '20px 0' }}
         />
       )}

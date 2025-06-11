@@ -1,11 +1,10 @@
 import { Collections as CollectionsIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
-import { getGemcaseCollectionUrl } from '../../utils/ipfsService';
 
 /**
- * Gemcaseコレクションページへのリンクボタン
+ * NFTマーケットプレイスへのリンクボタン群
  */
-const GemcaseButton = ({
+const MarketplaceButtons = ({
   contractAddress,
   networkName = 'sepolia',
   variant = 'contained',
@@ -13,39 +12,41 @@ const GemcaseButton = ({
   fullWidth = false,
   sx = {}
 }) => {
-  const handleGemcaseClick = async () => {
-    console.log('🎯 Gemcase button clicked!');
+  const handleMarketplaceClick = (platform) => {
+    console.log(`🎯 ${platform} button clicked!`);
     console.log(`   Props - contractAddress: ${contractAddress}`);
     console.log(`   Props - networkName: ${networkName}`);
 
-    const gemcaseUrls = getGemcaseCollectionUrl(contractAddress, networkName);
+    const urls = getNFTMarketplaceUrls(contractAddress, networkName);
 
-    if (gemcaseUrls && gemcaseUrls.primary) {
-      console.log('🔗 Opening Gemcase collection:', gemcaseUrls.primary);
+    if (!urls) {
+      console.error('❌ Failed to generate marketplace URLs');
+      return;
+    }
 
-      // まずプライマリURLを試す
-      const newWindow = window.open(gemcaseUrls.primary, '_blank', 'noopener,noreferrer');
+    let targetUrl;
+    switch (platform) {
+      case 'opensea':
+        targetUrl = urls.opensea;
+        console.log('🌊 Opening OpenSea:', targetUrl);
+        break;
+      case 'gemcase':
+        targetUrl = urls.gemcase[0]; // プライマリGemcase URL
+        console.log('💎 Opening Gemcase:', targetUrl);
+        // 代替URLも表示
+        console.log('💡 Alternative Gemcase URLs:', urls.gemcase.slice(1));
+        break;
+      case 'etherscan':
+        targetUrl = urls.etherscan;
+        console.log('🔍 Opening Etherscan:', targetUrl);
+        break;
+      default:
+        console.error('❌ Unknown platform:', platform);
+        return;
+    }
 
-      // 代替URLも表示（ユーザーが手動で試せるように）
-      if (gemcaseUrls.alternatives && gemcaseUrls.alternatives.length > 0) {
-        console.log('💡 If the page shows 404, try these alternative URLs:');
-        gemcaseUrls.alternatives.forEach((url, index) => {
-          console.log(`   ${index + 1}. ${url}`);
-        });
-
-        // 5秒後に代替URLの案内を表示
-        setTimeout(() => {
-          if (confirm('Gemcaseページが見つからない場合は、代替URLを試しますか？\n（コンソールで代替URLを確認できます）')) {
-            console.log('🔄 Alternative URLs:');
-            gemcaseUrls.alternatives.forEach((url, index) => {
-              console.log(`${index + 1}. ${url}`);
-            });
-          }
-        }, 5000);
-      }
-    } else {
-      console.error('❌ Failed to generate Gemcase URL');
-      console.error('❌ Check contract address and network name');
+    if (targetUrl) {
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -56,50 +57,110 @@ const GemcaseButton = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', ...sx }}>
-      <Button
-        variant={variant}
-        size={size}
-        fullWidth={fullWidth}
-        onClick={handleGemcaseClick}
-        startIcon={<CollectionsIcon />}
-        endIcon={<OpenInNewIcon />}
+      <Typography
+        variant="h6"
         sx={{
-          background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          fontWeight: 'bold',
-          textTransform: 'none',
-          borderRadius: 2,
-          padding: '12px 24px',
-          boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
-          '&:hover': {
-            background: 'linear-gradient(45deg, #5a6fd8 0%, #6a4190 100%)',
-            boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)',
-            transform: 'translateY(-2px)',
-          },
-          transition: 'all 0.3s ease',
-          ...sx
+          mb: 2,
+          color: 'text.primary',
+          fontSize: '1rem',
+          fontWeight: 'bold'
         }}
       >
-        Gemcaseでコレクションを表示
-      </Button>
+        NFTマーケットプレイスで確認
+      </Typography>
+
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {/* OpenSea ボタン */}
+        <Button
+          variant="contained"
+          size={size}
+          onClick={() => handleMarketplaceClick('opensea')}
+          startIcon={<CollectionsIcon />}
+          endIcon={<OpenInNewIcon />}
+          sx={{
+            background: 'linear-gradient(45deg, #2081e2 0%, #1868b7 100%)',
+            color: 'white',
+            fontWeight: 'bold',
+            textTransform: 'none',
+            borderRadius: 2,
+            padding: '8px 16px',
+            minWidth: '120px',
+            '&:hover': {
+              background: 'linear-gradient(45deg, #1868b7 0%, #145a9e 100%)',
+              transform: 'translateY(-1px)',
+            },
+            transition: 'all 0.3s ease',
+          }}
+        >
+          OpenSea
+        </Button>
+
+        {/* Gemcase ボタン */}
+        <Button
+          variant="contained"
+          size={size}
+          onClick={() => handleMarketplaceClick('gemcase')}
+          startIcon={<CollectionsIcon />}
+          endIcon={<OpenInNewIcon />}
+          sx={{
+            background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            fontWeight: 'bold',
+            textTransform: 'none',
+            borderRadius: 2,
+            padding: '8px 16px',
+            minWidth: '120px',
+            '&:hover': {
+              background: 'linear-gradient(45deg, #5a6fd8 0%, #6a4190 100%)',
+              transform: 'translateY(-1px)',
+            },
+            transition: 'all 0.3s ease',
+          }}
+        >
+          Gemcase
+        </Button>
+
+        {/* Etherscan ボタン */}
+        <Button
+          variant="outlined"
+          size={size}
+          onClick={() => handleMarketplaceClick('etherscan')}
+          startIcon={<CollectionsIcon />}
+          endIcon={<OpenInNewIcon />}
+          sx={{
+            borderColor: '#627eea',
+            color: '#627eea',
+            fontWeight: 'bold',
+            textTransform: 'none',
+            borderRadius: 2,
+            padding: '8px 16px',
+            minWidth: '120px',
+            '&:hover': {
+              borderColor: '#5a6fd8',
+              backgroundColor: 'rgba(98, 126, 234, 0.1)',
+              transform: 'translateY(-1px)',
+            },
+            transition: 'all 0.3s ease',
+          }}
+        >
+          Etherscan
+        </Button>
+      </Box>
 
       <Typography
         variant="caption"
         sx={{
-          mt: 1,
+          mt: 2,
           color: 'text.secondary',
           fontSize: '0.75rem',
-          textAlign: 'center'
+          textAlign: 'center',
+          maxWidth: '300px'
         }}
       >
-        NFTマーケットプレイスで確認
-        <br />
-        <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>
-          404の場合はコンソールで代替URLを確認
-        </span>
+        OpenSea（推奨）、Gemcase、Etherscanでコレクションを確認できます
       </Typography>
     </Box>
   );
 };
 
-export default GemcaseButton;
+export default MarketplaceButtons;
