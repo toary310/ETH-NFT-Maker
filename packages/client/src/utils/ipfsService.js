@@ -539,19 +539,38 @@ export const getNFTMarketplaceUrls = (contractAddress, networkName = 'sepolia') 
 
   const network = networkName.toLowerCase();
 
-  // OpenSea URLs (より確実)
+  // OpenSea URLs (複数の形式を試す)
   const openSeaUrls = {
-    'sepolia': `https://testnets.opensea.io/collection/unidentified-contract-${contractAddress.toLowerCase()}`,
-    'mainnet': `https://opensea.io/collection/unidentified-contract-${contractAddress.toLowerCase()}`,
-    'ethereum': `https://opensea.io/collection/unidentified-contract-${contractAddress.toLowerCase()}`,
-    'polygon': `https://opensea.io/collection/unidentified-contract-${contractAddress.toLowerCase()}`
+    'sepolia': [
+      `https://testnets.opensea.io/assets/sepolia/${contractAddress.toLowerCase()}`,
+      `https://testnets.opensea.io/assets/sepolia/${contractAddress.toLowerCase()}/1`,
+      `https://testnets.opensea.io/collection/${contractAddress.toLowerCase()}`,
+      `https://testnets.opensea.io/assets?search[query]=${contractAddress.toLowerCase()}`
+    ],
+    'mainnet': [
+      `https://opensea.io/assets/ethereum/${contractAddress.toLowerCase()}`,
+      `https://opensea.io/assets/ethereum/${contractAddress.toLowerCase()}/1`,
+      `https://opensea.io/collection/${contractAddress.toLowerCase()}`,
+      `https://opensea.io/assets?search[query]=${contractAddress.toLowerCase()}`
+    ],
+    'ethereum': [
+      `https://opensea.io/assets/ethereum/${contractAddress.toLowerCase()}`,
+      `https://opensea.io/assets/ethereum/${contractAddress.toLowerCase()}/1`,
+      `https://opensea.io/collection/${contractAddress.toLowerCase()}`,
+      `https://opensea.io/assets?search[query]=${contractAddress.toLowerCase()}`
+    ],
+    'polygon': [
+      `https://opensea.io/assets/matic/${contractAddress.toLowerCase()}`,
+      `https://opensea.io/assets/matic/${contractAddress.toLowerCase()}/1`,
+      `https://opensea.io/collection/${contractAddress.toLowerCase()}`
+    ]
   };
 
-  // Gemcase URLs
+  // Gemcase URLs (正しい形式)
   const gemcaseUrls = [
-    `https://gemcase.vercel.app/collection/${network}/${contractAddress}`,
-    `https://gemcase.vercel.app/collections/${network}/${contractAddress}`,
-    `https://gemcase.vercel.app/${network}/collection/${contractAddress}`
+    `https://gemcase.vercel.app/view/evm/${network}/${contractAddress}`,
+    `https://gemcase.vercel.app/collection/evm/${network}/${contractAddress}`,
+    `https://gemcase.vercel.app/nft/evm/${network}/${contractAddress}`
   ];
 
   // Etherscan URLs
@@ -561,13 +580,24 @@ export const getNFTMarketplaceUrls = (contractAddress, networkName = 'sepolia') 
     'ethereum': `https://etherscan.io/address/${contractAddress}`
   };
 
+  // 直接的なマーケットプレイス検索URL
+  const searchUrls = {
+    'opensea_search': `https://opensea.io/assets?search[query]=${contractAddress}`,
+    'opensea_testnet_search': `https://testnets.opensea.io/assets?search[query]=${contractAddress}`,
+    'looksrare': `https://looksrare.org/collections/${contractAddress}`,
+    'rarible': `https://rarible.com/collection/${contractAddress}`
+  };
+
   const result = {
     opensea: openSeaUrls[network] || openSeaUrls['sepolia'],
     gemcase: gemcaseUrls,
-    etherscan: etherscanUrls[network] || etherscanUrls['sepolia']
+    etherscan: etherscanUrls[network] || etherscanUrls['sepolia'],
+    search: searchUrls
   };
 
   console.log(`🔗 Generated marketplace URLs:`, result);
+  console.log(`🌊 OpenSea URLs for ${network}:`, result.opensea);
+  console.log(`🔍 Search URLs:`, result.search);
 
   return result;
 };

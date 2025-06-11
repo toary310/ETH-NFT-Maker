@@ -1,3 +1,4 @@
+import MarketplaceButtons from '../../GemcaseButton/GemcaseButton';
 import ContractStatus from './ContractStatus';
 import FileUpload from './FileUpload';
 import IpfsStatus from './IpfsStatus';

@@ -1,5 +1,6 @@
 import { Collections as CollectionsIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
+import { getNFTMarketplaceUrls } from '../../utils/ipfsService';
 
 /**
  * NFTマーケットプレイスへのリンクボタン群
@@ -25,20 +26,37 @@ const MarketplaceButtons = ({
     }
 
     let targetUrl;
+    let alternativeUrls = [];
+
     switch (platform) {
       case 'opensea':
-        targetUrl = urls.opensea;
+        if (Array.isArray(urls.opensea)) {
+          targetUrl = urls.opensea[0];
+          alternativeUrls = urls.opensea.slice(1);
+        } else {
+          targetUrl = urls.opensea;
+        }
         console.log('🌊 Opening OpenSea:', targetUrl);
+        if (alternativeUrls.length > 0) {
+          console.log('💡 Alternative OpenSea URLs:', alternativeUrls);
+        }
         break;
       case 'gemcase':
         targetUrl = urls.gemcase[0]; // プライマリGemcase URL
+        alternativeUrls = urls.gemcase.slice(1);
         console.log('💎 Opening Gemcase:', targetUrl);
-        // 代替URLも表示
-        console.log('💡 Alternative Gemcase URLs:', urls.gemcase.slice(1));
+        console.log('💡 Alternative Gemcase URLs:', alternativeUrls);
         break;
       case 'etherscan':
         targetUrl = urls.etherscan;
         console.log('🔍 Opening Etherscan:', targetUrl);
+        break;
+      case 'search':
+        // 検索URLを複数開く
+        const searchUrl = urls.search.opensea_testnet_search;
+        targetUrl = searchUrl;
+        console.log('🔍 Opening marketplace search:', targetUrl);
+        console.log('💡 Other search options:', urls.search);
         break;
       default:
         console.error('❌ Unknown platform:', platform);
@@ -47,6 +65,16 @@ const MarketplaceButtons = ({
 
     if (targetUrl) {
       window.open(targetUrl, '_blank', 'noopener,noreferrer');
+
+      // 代替URLがある場合は5秒後に案内
+      if (alternativeUrls.length > 0) {
+        setTimeout(() => {
+          console.log(`💡 ${platform}で404が表示された場合は、以下の代替URLを試してください:`);
+          alternativeUrls.forEach((url, index) => {
+            console.log(`   ${index + 1}. ${url}`);
+          });
+        }, 3000);
+      }
     }
   };
 
@@ -120,6 +148,32 @@ const MarketplaceButtons = ({
           Gemcase
         </Button>
 
+        {/* 検索ボタン */}
+        <Button
+          variant="outlined"
+          size={size}
+          onClick={() => handleMarketplaceClick('search')}
+          startIcon={<CollectionsIcon />}
+          endIcon={<OpenInNewIcon />}
+          sx={{
+            borderColor: '#ff6b35',
+            color: '#ff6b35',
+            fontWeight: 'bold',
+            textTransform: 'none',
+            borderRadius: 2,
+            padding: '8px 16px',
+            minWidth: '120px',
+            '&:hover': {
+              borderColor: '#e55a2b',
+              backgroundColor: 'rgba(255, 107, 53, 0.1)',
+              transform: 'translateY(-1px)',
+            },
+            transition: 'all 0.3s ease',
+          }}
+        >
+          検索
+        </Button>
+
         {/* Etherscan ボタン */}
         <Button
           variant="outlined"
@@ -157,7 +211,7 @@ const MarketplaceButtons = ({
           maxWidth: '300px'
         }}
       >
-        OpenSea（推奨）、Gemcase、Etherscanでコレクションを確認できます
+        OpenSea、Gemcase、検索、Etherscanでコレクションを確認できます。404の場合は検索ボタンをお試しください。
       </Typography>
     </Box>
   );
