@@ -25,20 +25,30 @@ Vercel should auto-detect the React app, but verify these settings:
 
 ## Step 3: Environment Variables
 
-Add these environment variables in Vercel Dashboard:
+**Important**: Add these in Vercel Dashboard → Project Settings → Environment Variables
 
 ### Required Variables
 
-```
-REACT_APP_CONTRACT_ADDRESS=0xe97456126A0F678f31384Ac4c30Ee4B3EA16E615
-REACT_APP_NETWORK_NAME=sepolia
-```
+| Name | Value | Environment |
+|------|-------|-------------|
+| `REACT_APP_CONTRACT_ADDRESS` | `0xe97456126A0F678f31384Ac4c30Ee4B3EA16E615` | Production, Preview, Development |
+| `REACT_APP_NETWORK_NAME` | `sepolia` | Production, Preview, Development |
 
 ### Optional (for real IPFS)
 
-```
-REACT_APP_W3UP_EMAIL=your-email@example.com
-```
+| Name | Value | Environment |
+|------|-------|-------------|
+| `REACT_APP_W3UP_EMAIL` | `your-email@example.com` | Production, Preview, Development |
+
+### How to Add Environment Variables:
+
+1. Go to your project in Vercel Dashboard
+2. Click "Settings" tab
+3. Click "Environment Variables" in sidebar
+4. Click "Add New"
+5. Enter Name and Value
+6. Select environments (Production, Preview, Development)
+7. Click "Save"
 
 ## Step 4: Deploy
 
@@ -54,17 +64,29 @@ REACT_APP_W3UP_EMAIL=your-email@example.com
 
 ## Troubleshooting
 
+### Environment Variable Errors
+
+**Error**: `Environment Variable "REACT_APP_CONTRACT_ADDRESS" references Secret "react_app_contract_address", which does not exist.`
+
+**Solution**:
+1. Don't use the `env` section in vercel.json
+2. Add environment variables manually in Vercel Dashboard
+3. Go to Project Settings → Environment Variables
+4. Add each variable individually
+
 ### Build Errors
 
 - Check build logs in Vercel dashboard
 - Ensure all dependencies are in package.json
-- Verify environment variables are set
+- Verify environment variables are set correctly
+- Make sure vercel.json doesn't reference non-existent secrets
 
 ### Runtime Errors
 
 - Check browser console for errors
 - Verify MetaMask is installed
 - Ensure you're on Sepolia testnet
+- Check that environment variables are properly set
 
 ## Post-Deployment Checklist
 
