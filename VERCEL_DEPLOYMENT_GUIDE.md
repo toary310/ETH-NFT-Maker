@@ -15,11 +15,11 @@
 
 ## Step 2: Configure Build Settings
 
-Vercel should auto-detect the React app, but verify these settings:
+Configure these build settings manually:
 
-- **Framework Preset**: `Create React App`
+- **Framework Preset**: `Other` (not Create React App)
 - **Root Directory**: `./` (leave empty)
-- **Build Command**: `yarn vercel-build`
+- **Build Command**: `yarn workspace client build`
 - **Output Directory**: `packages/client/build`
 - **Install Command**: `yarn install`
 
@@ -76,6 +76,14 @@ Vercel should auto-detect the React app, but verify these settings:
 
 ### Build Errors
 
+**Error**: `sh: line 1: cd: packages/client: No such file or directory`
+
+**Solution**:
+- Use `yarn workspace client build` instead of `cd packages/client && yarn build`
+- Set Framework Preset to "Other" instead of "Create React App"
+- Ensure vercel.json uses workspace commands
+
+**General Build Issues**:
 - Check build logs in Vercel dashboard
 - Ensure all dependencies are in package.json
 - Verify environment variables are set correctly

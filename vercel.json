@@ -1,24 +1,8 @@
 {
   "version": 2,
   "name": "eth-nft-maker",
-  "builds": [
-    {
-      "src": "packages/client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "packages/client/$1"
-    }
-  ],
-  "buildCommand": "cd packages/client && yarn build",
+  "buildCommand": "yarn workspace client build",
   "outputDirectory": "packages/client/build",
   "installCommand": "yarn install",
-  "devCommand": "cd packages/client && yarn start",
-  "framework": "create-react-app"
+  "framework": null
 }
