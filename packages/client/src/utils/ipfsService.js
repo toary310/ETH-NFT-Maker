@@ -12,6 +12,24 @@
 // w3upの動的インポート（ES6対応）
 let w3upClient = null;
 
+/**
+ * CID形式の検証
+ */
+const isValidCID = (cid) => {
+  if (typeof cid !== 'string') return false;
+
+  // IPFS CIDの基本的な形式チェック
+  const cidRegex = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[a-z0-9]{52,})$/;
+  const isValid = cidRegex.test(cid);
+
+  if (!isValid) {
+    console.error('❌ Invalid CID format:', cid);
+    console.error('❌ CID should start with "Qm" (46 chars) or "bafy" (56+ chars)');
+  }
+
+  return isValid;
+};
+
 const initializeW3up = async () => {
   if (process.env.REACT_APP_W3UP_EMAIL && !w3upClient) {
     try {
@@ -129,11 +147,29 @@ const realUploadToIPFS = async (file) => {
     }
 
     console.log('📤 Starting file upload...');
-    const cid = await client.uploadFile(file);
-    const cidString = cid.toString();
+    const result = await client.uploadFile(file);
+
+    // CIDの安全な取得
+    let cidString;
+    if (typeof result === 'string') {
+      cidString = result;
+    } else if (result && typeof result.toString === 'function') {
+      cidString = result.toString();
+    } else if (result && result.cid) {
+      cidString = result.cid.toString();
+    } else {
+      throw new Error('Invalid CID format received from w3up');
+    }
+
+    // CID検証
+    if (!isValidCID(cidString)) {
+      throw new Error(`Invalid CID format: ${cidString}`);
+    }
 
     console.log(`✅ File uploaded successfully!`);
     console.log(`📸 Image CID: ${cidString}`);
+    console.log(`📸 CID type: ${typeof result}`);
+    console.log(`📸 CID object:`, result);
 
     // 複数のHTTPS URLを生成
     const urls = {
@@ -220,11 +256,29 @@ const realUploadMetadata = async (metadata) => {
     console.log(`📊 Metadata file size: ${metadataFile.size} bytes`);
     console.log('📤 Starting metadata upload...');
 
-    const cid = await client.uploadFile(metadataFile);
-    const cidString = cid.toString();
+    const result = await client.uploadFile(metadataFile);
+
+    // CIDの安全な取得
+    let cidString;
+    if (typeof result === 'string') {
+      cidString = result;
+    } else if (result && typeof result.toString === 'function') {
+      cidString = result.toString();
+    } else if (result && result.cid) {
+      cidString = result.cid.toString();
+    } else {
+      throw new Error('Invalid metadata CID format received from w3up');
+    }
+
+    // CID検証
+    if (!isValidCID(cidString)) {
+      throw new Error(`Invalid metadata CID format: ${cidString}`);
+    }
 
     console.log(`✅ Metadata uploaded successfully!`);
     console.log(`📄 Metadata CID: ${cidString}`);
+    console.log(`📄 CID type: ${typeof result}`);
+    console.log(`📄 CID object:`, result);
 
     // Etherscan対応のHTTPS URLを生成（IPFS.ioを使用）
     const httpsUrl = generateEtherscanCompatibleUrl(cidString, 'ipfs_io');
