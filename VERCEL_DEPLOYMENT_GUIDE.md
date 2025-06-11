@@ -19,7 +19,7 @@ Configure these build settings manually:
 
 - **Framework Preset**: `Other` (not Create React App)
 - **Root Directory**: `./` (leave empty)
-- **Build Command**: `cd packages/client && yarn build`
+- **Build Command**: `yarn workspace client build`
 - **Output Directory**: `packages/client/build`
 - **Install Command**: `yarn install`
 
