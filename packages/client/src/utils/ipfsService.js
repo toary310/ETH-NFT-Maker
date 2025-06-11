@@ -31,17 +31,17 @@ const isValidCID = (cid) => {
 };
 
 const initializePinata = async () => {
-  if (process.env.REACT_APP_PINATA_API_KEY && process.env.REACT_APP_PINATA_SECRET_KEY && !pinataClient) {
+  if (process.env.REACT_APP_PINATA_API_KEY && !pinataClient) {
     try {
       console.log('🚀 Pinata: 実際のIPFS初期化を開始します...');
       console.log(`🔑 API Key: ${process.env.REACT_APP_PINATA_API_KEY.substring(0, 8)}...`);
 
-      // Pinata SDK を使用
-      const pinataSDK = await import('@pinata/sdk');
-      const pinata = new pinataSDK.default(
-        process.env.REACT_APP_PINATA_API_KEY,
-        process.env.REACT_APP_PINATA_SECRET_KEY
-      );
+      // 新しいPinata Web3 SDK を使用
+      const { PinataSDK } = await import('pinata-web3');
+      const pinata = new PinataSDK({
+        pinataJwt: process.env.REACT_APP_PINATA_API_KEY,
+        pinataGateway: "gateway.pinata.cloud"
+      });
 
       console.log('💻 Pinata: クライアント作成完了');
 
@@ -63,7 +63,7 @@ const initializePinata = async () => {
       console.log('ℹ️ フォールバック: モックIPFSを使用します');
       return null;
     }
-  } else if (!process.env.REACT_APP_PINATA_API_KEY || !process.env.REACT_APP_PINATA_SECRET_KEY) {
+  } else if (!process.env.REACT_APP_PINATA_API_KEY) {
     console.log('⚠️ Pinata APIキーが設定されていません');
     return null;
   } else {
@@ -138,22 +138,16 @@ const realUploadToIPFS = async (file) => {
 
     console.log('📤 Starting file upload...');
 
-    // Pinata用のオプション設定
-    const options = {
-      pinataMetadata: {
-        name: `nft-image-${Date.now()}-${file.name}`,
-        keyvalues: {
-          type: 'nft-image',
-          originalName: file.name,
-          uploadDate: new Date().toISOString()
-        }
-      },
-      pinataOptions: {
-        cidVersion: 0
+    // 新しいPinata Web3 SDKでのアップロード
+    const result = await client.upload.file(file).addMetadata({
+      name: `nft-image-${Date.now()}-${file.name}`,
+      keyValues: {
+        type: 'nft-image',
+        originalName: file.name,
+        uploadDate: new Date().toISOString()
       }
-    };
+    });
 
-    const result = await client.pinFileToIPFS(file, options);
     const cidString = result.IpfsHash;
 
     // CID検証
@@ -242,22 +236,16 @@ const realUploadMetadata = async (metadata) => {
 
     console.log('📤 Starting metadata upload...');
 
-    // Pinata用のオプション設定
-    const options = {
-      pinataMetadata: {
-        name: `nft-metadata-${Date.now()}`,
-        keyvalues: {
-          type: 'nft-metadata',
-          nftName: metadata.name,
-          uploadDate: new Date().toISOString()
-        }
-      },
-      pinataOptions: {
-        cidVersion: 0
+    // 新しいPinata Web3 SDKでのJSONアップロード
+    const result = await client.upload.json(metadata).addMetadata({
+      name: `nft-metadata-${Date.now()}`,
+      keyValues: {
+        type: 'nft-metadata',
+        nftName: metadata.name,
+        uploadDate: new Date().toISOString()
       }
-    };
+    });
 
-    const result = await client.pinJSONToIPFS(metadata, options);
     const cidString = result.IpfsHash;
 
     // CID検証
@@ -535,7 +523,7 @@ export const isDevelopment = () => {
  * Pinata利用可能性チェック
  */
 export const isPinataAvailable = () => {
-  return !!(process.env.REACT_APP_PINATA_API_KEY && process.env.REACT_APP_PINATA_SECRET_KEY);
+  return !!process.env.REACT_APP_PINATA_API_KEY;
 };
 
 /**
@@ -590,11 +578,10 @@ export const getIPFSUploader = () => {
       }
     };
   } else {
-    console.log("❌ Pinata API keys not configured. To use REAL IPFS:");
+    console.log("❌ Pinata JWT token not configured. To use REAL IPFS:");
     console.log("   1. Sign up at: https://pinata.cloud/");
-    console.log("   2. Create API keys in your dashboard");
-    console.log("   3. Add REACT_APP_PINATA_API_KEY=your_api_key to .env file");
-    console.log("   4. Add REACT_APP_PINATA_SECRET_KEY=your_secret_key to .env file");
+    console.log("   2. Create JWT token in your dashboard");
+    console.log("   3. Add REACT_APP_PINATA_API_KEY=your_jwt_token to .env file");
     console.log("🧪 Fallback: Using mock IPFS service");
     console.log('⚠️ モックIPFSサービスを使用します（実際のストレージではありません）');
 
