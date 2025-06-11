@@ -23,57 +23,29 @@ const initializeW3up = async () => {
 
       console.log('💻 w3up: クライアント作成完了');
 
-      // アカウント情報の詳細ログ
-      const accountsObj = client.accounts();
-      const accountsArray = Object.values(accountsObj);
-      console.log('👥 Accounts found:', accountsArray.length);
-      console.log('📊 Account details:', accountsObj);
-
-      // アカウントの確認と設定
-      const accounts = Object.values(client.accounts());
-      if (accounts.length === 0) {
-        console.log('📧 w3up: 新規アカウント作成が必要です');
-        console.log('ℹ️ ブラウザで認証プロセスを完了してください');
+      try {
+        // シンプルなスペース作成
+        console.log('🌌 w3up: スペースを作成中...');
+        const space = await client.createSpace('nft-maker-space');
+        await space.save();
+        await client.setCurrentSpace(space.did());
+        console.log('🌌 w3up: スペース作成・設定完了');
+      } catch (spaceError) {
+        console.log('⚠️ w3up: スペース作成に失敗、既存スペースを確認中...');
 
         try {
-          // 新規アカウント作成
-          const account = await client.createAccount(process.env.REACT_APP_W3UP_EMAIL);
-          console.log('✅ w3up: アカウント作成完了');
-
-          // スペースの作成
-          const space = await client.createSpace('nft-maker-space');
-          await account.provision(space.did());
-          await space.save();
-          await client.setCurrentSpace(space.did());
-
-          console.log('🌌 w3up: スペース作成・設定完了');
-        } catch (accountError) {
-          console.log('⚠️ w3up: アカウント作成に失敗、モックモードに切り替えます');
-          console.error('Account creation error:', accountError);
-          return null;
-        }
-      } else {
-        console.log('✅ w3up: 既存アカウントを使用');
-        try {
-          // 最初のアカウントを使用
-          const account = accounts[0];
-
-          // スペース一覧を取得（新しいAPI対応）
+          // 既存スペースを使用
           const spaces = client.spaces();
           if (spaces.length > 0) {
             await client.setCurrentSpace(spaces[0].did());
-            console.log('🌌 w3up: 既存スペースを設定');
+            console.log('🌌 w3up: 既存スペースを使用');
           } else {
-            // スペースがない場合は新規作成
-            const space = await client.createSpace('nft-maker-space');
-            await account.provision(space.did());
-            await space.save();
-            await client.setCurrentSpace(space.did());
-            console.log('🌌 w3up: 新規スペースを作成・設定');
+            console.log('❌ w3up: 利用可能なスペースがありません');
+            return null;
           }
-        } catch (spaceError) {
-          console.log('⚠️ w3up: スペース設定に失敗、モックモードに切り替えます');
-          console.error('Space setup error:', spaceError);
+        } catch (fallbackError) {
+          console.log('❌ w3up: スペース設定に完全に失敗');
+          console.error('Fallback error:', fallbackError);
           return null;
         }
       }
@@ -86,7 +58,7 @@ const initializeW3up = async () => {
       console.log('ℹ️ フォールバック: モックIPFSを使用します');
       return null;
     }
-  } else if (!process.env.REACT_APP_W3UP_EMAIL) {
+  } else {
     console.log('🔄 w3up: 既存クライアントを使用');
     return w3upClient;
   }
