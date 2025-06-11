@@ -42,30 +42,45 @@ const initializeW3up = async () => {
       console.log('💻 w3up: クライアント作成完了');
 
       try {
-        // シンプルなスペース作成
-        console.log('🌌 w3up: スペースを作成中...');
-        const space = await client.createSpace('nft-maker-space');
-        await space.save();
-        await client.setCurrentSpace(space.did());
-        console.log('🌌 w3up: スペース作成・設定完了');
-      } catch (spaceError) {
-        console.log('⚠️ w3up: スペース作成に失敗、既存スペースを確認中...');
+        // 既存スペースを確認
+        const spaces = client.spaces();
+        console.log(`🔍 w3up: 既存スペース数: ${spaces.length}`);
 
-        try {
+        if (spaces.length > 0) {
           // 既存スペースを使用
-          const spaces = client.spaces();
-          if (spaces.length > 0) {
-            await client.setCurrentSpace(spaces[0].did());
-            console.log('🌌 w3up: 既存スペースを使用');
-          } else {
-            console.log('❌ w3up: 利用可能なスペースがありません');
-            return null;
+          const space = spaces[0];
+          await client.setCurrentSpace(space.did());
+          console.log('🌌 w3up: 既存スペースを使用');
+          console.log(`📍 Space DID: ${space.did()}`);
+
+          // スペースの権限確認
+          try {
+            console.log('🔐 w3up: スペース権限を確認中...');
+            // 小さなテストファイルでアップロードテスト
+            const testBlob = new Blob(['test'], { type: 'text/plain' });
+            const testFile = new File([testBlob], 'test.txt', { type: 'text/plain' });
+            await client.uploadFile(testFile);
+            console.log('✅ w3up: スペース権限確認完了');
+          } catch (permissionError) {
+            console.log('❌ w3up: スペース権限不足');
+            console.error('Permission error:', permissionError);
+            throw new Error('Space permission denied');
           }
-        } catch (fallbackError) {
-          console.log('❌ w3up: スペース設定に完全に失敗');
-          console.error('Fallback error:', fallbackError);
-          return null;
+        } else {
+          // 新規スペース作成
+          console.log('🌌 w3up: 新規スペースを作成中...');
+          const space = await client.createSpace('nft-maker-space');
+          await space.save();
+          await client.setCurrentSpace(space.did());
+          console.log('🌌 w3up: 新規スペース作成完了');
+          console.log(`📍 Space DID: ${space.did()}`);
+          console.log('⚠️ w3up: ブラウザでの認証が必要な場合があります');
+          console.log('🔗 認証URL: https://console.storacha.network/');
         }
+      } catch (spaceError) {
+        console.log('❌ w3up: スペース設定に失敗');
+        console.error('Space error:', spaceError);
+        return null;
       }
 
       console.log('🌍 w3up client initialized successfully');
@@ -231,6 +246,17 @@ const realUploadToIPFS = async (file) => {
     };
   } catch (error) {
     console.error('❌ w3up upload error:', error);
+
+    // 特定のエラーメッセージに基づく詳細な説明
+    if (error.message.includes('space/blob/add invocation')) {
+      console.error('🔐 w3up認証エラー: スペースにファイルを追加する権限がありません');
+      console.error('💡 解決方法:');
+      console.error('   1. https://console.storacha.network/ にアクセス');
+      console.error('   2. 同じメールアドレスでサインアップ/ログイン');
+      console.error('   3. スペースを認証してください');
+      throw new Error(`IPFS upload failed: Space permission denied. Please authenticate at https://console.storacha.network/`);
+    }
+
     throw new Error(`IPFS upload failed: ${error.message}`);
   }
 };
@@ -290,6 +316,14 @@ const realUploadMetadata = async (metadata) => {
     };
   } catch (error) {
     console.error('❌ w3up metadata upload error:', error);
+
+    // 特定のエラーメッセージに基づく詳細な説明
+    if (error.message.includes('space/blob/add invocation')) {
+      console.error('🔐 w3up認証エラー: スペースにメタデータを追加する権限がありません');
+      console.error('💡 解決方法: https://console.storacha.network/ で認証してください');
+      throw new Error(`Metadata upload failed: Space permission denied. Please authenticate at https://console.storacha.network/`);
+    }
+
     throw new Error(`Metadata upload failed: ${error.message}`);
   }
 };
@@ -597,8 +631,14 @@ export const getIPFSUploader = () => {
     console.log("   1. Sign up at: https://console.storacha.network/");
     console.log("   2. Add REACT_APP_W3UP_EMAIL=your_email@example.com to .env file");
     console.log("   3. Follow email verification process");
+    console.log("   4. Authenticate your space in the browser");
     console.log("🧪 Fallback: Using mock IPFS service");
     console.log('⚠️ モックIPFSサービスを使用します（実際のストレージではありません）');
+    console.log('');
+    console.log('🔐 w3up認証が必要な場合:');
+    console.log('   - ブラウザで https://console.storacha.network/ を開く');
+    console.log('   - 同じメールアドレスでログイン');
+    console.log('   - スペースを認証してください');
 
     return {
       uploadToIPFS: mockUploadToIPFS,
