@@ -19,8 +19,8 @@ Configure these build settings manually:
 
 - **Framework Preset**: `Other` (not Create React App)
 - **Root Directory**: `./` (leave empty)
-- **Build Command**: `yarn workspace client build`
-- **Output Directory**: `packages/client/build`
+- **Build Command**: `yarn workspace client build && cp -r packages/client/build ./build`
+- **Output Directory**: `build`
 - **Install Command**: `yarn install`
 
 ## Step 3: Environment Variables
@@ -75,6 +75,13 @@ Configure these build settings manually:
 4. Add each variable individually
 
 ### Build Errors
+
+**Error**: `No Output Directory named "build" found after the Build completed`
+
+**Solution**:
+- Copy build files to root: `yarn workspace client build && cp -r packages/client/build ./build`
+- Set Output Directory to `build` (not `packages/client/build`)
+- Ensure build command includes the copy operation
 
 **Error**: `sh: line 1: cd: packages/client: No such file or directory`
 
