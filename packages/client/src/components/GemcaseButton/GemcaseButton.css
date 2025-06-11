@@ -1,0 +1,71 @@
+/* Gemcaseボタンのカスタムスタイル */
+
+.gemcase-button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.gemcase-button {
+  background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: bold;
+  text-transform: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gemcase-button:hover {
+  background: linear-gradient(45deg, #5a6fd8 0%, #6a4190 100%);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+.gemcase-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+.gemcase-button-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.gemcase-button-text {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gemcase-button-description {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 600px) {
+  .gemcase-button {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+  
+  .gemcase-button-text {
+    font-size: 13px;
+  }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .gemcase-button-description {
+    color: #aaa;
+  }
+}

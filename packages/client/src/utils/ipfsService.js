@@ -525,6 +525,31 @@ export const isDevelopment = () => {
 };
 
 /**
+ * GemcaseコレクションページのURLを生成
+ */
+export const getGemcaseCollectionUrl = (contractAddress, networkName = 'sepolia') => {
+  if (!contractAddress) {
+    console.warn('⚠️ Contract address not provided for Gemcase URL');
+    return null;
+  }
+
+  // ネットワーク名をGemcase形式に変換
+  const networkMap = {
+    'sepolia': 'sepolia',
+    'mainnet': 'ethereum',
+    'ethereum': 'ethereum',
+    'polygon': 'polygon',
+    'arbitrum': 'arbitrum'
+  };
+
+  const gemcaseNetwork = networkMap[networkName.toLowerCase()] || 'sepolia';
+  const gemcaseUrl = `https://gemcase.vercel.app/collection/${gemcaseNetwork}/${contractAddress}`;
+
+  console.log(`🔗 Gemcase collection URL: ${gemcaseUrl}`);
+  return gemcaseUrl;
+};
+
+/**
  * Pinata利用可能性チェック
  */
 export const isPinataAvailable = () => {
