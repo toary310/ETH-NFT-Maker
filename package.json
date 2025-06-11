@@ -11,6 +11,9 @@
   "scripts": {
     "contract": "yarn workspace contract",
     "client": "yarn workspace client",
-    "test": "yarn workspace contract test"
+    "test": "yarn workspace contract test",
+    "verify": "npx hardhat run scripts/verify.js --network sepolia",
+    "verify:sepolia": "npx hardhat run scripts/verify-sepolia.js --network sepolia",
+    "verify:manual": "npx hardhat verify --network sepolia"
   }
 }
