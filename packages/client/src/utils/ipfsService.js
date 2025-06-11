@@ -13,18 +13,26 @@
 let pinataClient = null;
 
 /**
- * CID形式の検証
+ * CID形式の検証（CIDv0とCIDv1対応）
  */
 const isValidCID = (cid) => {
   if (typeof cid !== 'string') return false;
 
-  // IPFS CIDの基本的な形式チェック
-  const cidRegex = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[a-z0-9]{52,})$/;
-  const isValid = cidRegex.test(cid);
+  // IPFS CIDの形式チェック（CIDv0とCIDv1両方対応）
+  const cidv0Regex = /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/;  // CIDv0: Qm + 44文字
+  const cidv1Regex = /^ba[a-z0-9]{56,}$/;              // CIDv1: ba + 56文字以上
+
+  const isValid = cidv0Regex.test(cid) || cidv1Regex.test(cid);
 
   if (!isValid) {
     console.error('❌ Invalid CID format:', cid);
-    console.error('❌ CID should start with "Qm" (46 chars) or "bafy" (56+ chars)');
+    console.error('❌ CID should be:');
+    console.error('   - CIDv0: "Qm" + 44 chars (total 46)');
+    console.error('   - CIDv1: "ba" + 56+ chars (total 58+)');
+    console.error(`❌ Received: "${cid}" (${cid.length} chars)`);
+  } else {
+    const version = cid.startsWith('Qm') ? 'v0' : 'v1';
+    console.log(`✅ Valid CID${version}: ${cid}`);
   }
 
   return isValid;
