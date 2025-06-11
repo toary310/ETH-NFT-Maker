@@ -30,7 +30,7 @@ const isValidCID = (cid) => {
     console.error('   - CIDv0: "Qm" + 44 chars (total 46)');
     console.error('   - CIDv1: "ba" + 56+ chars (total 58+)');
     console.error(`❌ Received: "${cid}" (${cid.length} chars)`);
-  } else {
+  } else if (process.env.NODE_ENV === 'development') {
     const version = cid.startsWith('Qm') ? 'v0' : 'v1';
     console.log(`✅ Valid CID${version}: ${cid}`);
   }
@@ -42,7 +42,6 @@ const initializePinata = async () => {
   if (process.env.REACT_APP_PINATA_API_KEY && !pinataClient) {
     try {
       console.log('🚀 Pinata: 実際のIPFS初期化を開始します...');
-      console.log(`🔑 API Key: ${process.env.REACT_APP_PINATA_API_KEY.substring(0, 8)}...`);
 
       // 新しいPinata Web3 SDK を使用
       const { PinataSDK } = await import('pinata-web3');
@@ -166,7 +165,6 @@ const realUploadToIPFS = async (file) => {
     console.log(`✅ File uploaded successfully!`);
     console.log(`📸 Image CID: ${cidString}`);
     console.log(`📸 File name: ${file.name}`);
-    console.log(`📸 Pinata result:`, result);
 
     // 複数のHTTPS URLを生成
     const urls = {
@@ -263,7 +261,6 @@ const realUploadMetadata = async (metadata) => {
 
     console.log(`✅ Metadata uploaded successfully!`);
     console.log(`📄 Metadata CID: ${cidString}`);
-    console.log(`📄 Pinata result:`, result);
 
     // Etherscan対応のHTTPS URLを生成（IPFS.ioを使用）
     const httpsUrl = generateEtherscanCompatibleUrl(cidString, 'ipfs_io');
