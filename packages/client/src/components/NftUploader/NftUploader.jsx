@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import useContract from '../../hooks/useContract';
 import useWallet from '../../hooks/useWallet';
-import { isWeb3StorageAvailable } from '../../utils/ipfsService';
+import { isPinataAvailable } from '../../utils/ipfsService';
 import NftUploaderLayout from './components/NftUploaderLayout';
 import useFileUpload from './hooks/useFileUpload';
 import useNftMinting from './hooks/useNftMinting';
@@ -58,7 +58,7 @@ const NftUploader = () => {
   } = useNftMinting();
 
   // IPFS状態
-  const isUsingRealIPFS = isWeb3StorageAvailable();
+  const isUsingRealIPFS = isPinataAvailable();
 
   // 統合されたpending状態
   const isPending = walletPending || contractPending || mintPending;
