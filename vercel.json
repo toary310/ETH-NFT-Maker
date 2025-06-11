@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "name": "eth-nft-maker",
+  "builds": [
+    {
+      "src": "packages/client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "packages/client/$1"
+    }
+  ],
+  "buildCommand": "cd packages/client && yarn build",
+  "outputDirectory": "packages/client/build",
+  "installCommand": "yarn install",
+  "devCommand": "cd packages/client && yarn start",
+  "framework": "create-react-app",
+  "env": {
+    "REACT_APP_CONTRACT_ADDRESS": "@react_app_contract_address",
+    "REACT_APP_NETWORK_NAME": "@react_app_network_name",
+    "REACT_APP_W3UP_EMAIL": "@react_app_w3up_email"
+  }
+}
