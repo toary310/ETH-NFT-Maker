@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "eth-nft-maker",
-  "buildCommand": "yarn workspace client build && cp -r packages/client/build ./build",
+  "buildCommand": "yarn workspace client build && find . -name 'build' -type d && ls -la && ls -la packages/ && ls -la packages/client/ && cp -r packages/client/build ./build",
   "outputDirectory": "build",
   "installCommand": "yarn install",
   "framework": null
