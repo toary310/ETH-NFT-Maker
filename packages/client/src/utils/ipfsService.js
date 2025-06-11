@@ -9,8 +9,8 @@
  * - フォールバック機能付き（w3up失敗時のみモック使用）
  */
 
-// w3upの動的インポート（ES6対応）
-let w3upClient = null;
+// Pinata IPFS クライアント
+let pinataClient = null;
 
 /**
  * CID形式の検証
@@ -30,73 +30,48 @@ const isValidCID = (cid) => {
   return isValid;
 };
 
-const initializeW3up = async () => {
-  if (process.env.REACT_APP_W3UP_EMAIL && !w3upClient) {
+const initializePinata = async () => {
+  if (process.env.REACT_APP_PINATA_API_KEY && process.env.REACT_APP_PINATA_SECRET_KEY && !pinataClient) {
     try {
-      console.log('🚀 w3up: 実際のIPFS初期化を開始します...');
-      console.log(`📧 Email: ${process.env.REACT_APP_W3UP_EMAIL}`);
+      console.log('🚀 Pinata: 実際のIPFS初期化を開始します...');
+      console.log(`🔑 API Key: ${process.env.REACT_APP_PINATA_API_KEY.substring(0, 8)}...`);
 
-      const Client = await import('@web3-storage/w3up-client');
-      const client = await Client.create();
+      // Pinata SDK を使用
+      const pinataSDK = await import('@pinata/sdk');
+      const pinata = new pinataSDK.default(
+        process.env.REACT_APP_PINATA_API_KEY,
+        process.env.REACT_APP_PINATA_SECRET_KEY
+      );
 
-      console.log('💻 w3up: クライアント作成完了');
+      console.log('💻 Pinata: クライアント作成完了');
 
+      // 接続テスト
+      console.log('🔐 Pinata: 接続テスト中...');
       try {
-        // 既存スペースを確認
-        const spaces = client.spaces();
-        console.log(`🔍 w3up: 既存スペース数: ${spaces.length}`);
+        await pinata.testAuthentication();
+        console.log('✅ Pinata: 認証成功');
 
-        if (spaces.length > 0) {
-          // 既存スペースを使用
-          const space = spaces[0];
-          await client.setCurrentSpace(space.did());
-          console.log('🌌 w3up: 既存スペースを使用');
-          console.log(`📍 Space DID: ${space.did()}`);
-
-          // スペースの権限確認
-          try {
-            console.log('🔐 w3up: スペース権限を確認中...');
-            // 小さなテストファイルでアップロードテスト
-            const testBlob = new Blob(['test'], { type: 'text/plain' });
-            const testFile = new File([testBlob], 'test.txt', { type: 'text/plain' });
-            await client.uploadFile(testFile);
-            console.log('✅ w3up: スペース権限確認完了');
-          } catch (permissionError) {
-            console.log('❌ w3up: スペース権限不足');
-            console.error('Permission error:', permissionError);
-            throw new Error('Space permission denied');
-          }
-        } else {
-          // 新規スペース作成
-          console.log('🌌 w3up: 新規スペースを作成中...');
-          const space = await client.createSpace('nft-maker-space');
-          await space.save();
-          await client.setCurrentSpace(space.did());
-          console.log('🌌 w3up: 新規スペース作成完了');
-          console.log(`📍 Space DID: ${space.did()}`);
-          console.log('⚠️ w3up: ブラウザでの認証が必要な場合があります');
-          console.log('🔗 認証URL: https://console.storacha.network/');
-        }
-      } catch (spaceError) {
-        console.log('❌ w3up: スペース設定に失敗');
-        console.error('Space error:', spaceError);
+        pinataClient = pinata;
+        return pinata;
+      } catch (authError) {
+        console.log('❌ Pinata: 認証失敗');
+        console.error('Auth error:', authError);
         return null;
       }
-
-      console.log('🌍 w3up client initialized successfully');
-      w3upClient = client;
-      return client;
     } catch (error) {
-      console.error('❌ w3up initialization error:', error);
+      console.error('❌ Pinata initialization error:', error);
       console.log('ℹ️ フォールバック: モックIPFSを使用します');
       return null;
     }
+  } else if (!process.env.REACT_APP_PINATA_API_KEY || !process.env.REACT_APP_PINATA_SECRET_KEY) {
+    console.log('⚠️ Pinata APIキーが設定されていません');
+    return null;
   } else {
-    console.log('🔄 w3up: 既存クライアントを使用');
-    return w3upClient;
+    console.log('🔄 Pinata: 既存クライアントを使用');
+    return pinataClient;
   }
 
-  return w3upClient;
+  return pinataClient;
 };
 
 /**
@@ -153,28 +128,33 @@ export const mockUploadToIPFS = async (file) => {
  */
 const realUploadToIPFS = async (file) => {
   try {
-    console.log(`🌍 Uploading ${file.name} to w3up (Etherscan compatible)...`);
+    console.log(`🌍 Uploading ${file.name} to Pinata (Etherscan compatible)...`);
     console.log(`📊 File details: ${file.size} bytes, ${file.type}`);
 
-    const client = await initializeW3up();
+    const client = await initializePinata();
     if (!client) {
-      throw new Error('w3up client not available');
+      throw new Error('Pinata client not available');
     }
 
     console.log('📤 Starting file upload...');
-    const result = await client.uploadFile(file);
 
-    // CIDの安全な取得
-    let cidString;
-    if (typeof result === 'string') {
-      cidString = result;
-    } else if (result && typeof result.toString === 'function') {
-      cidString = result.toString();
-    } else if (result && result.cid) {
-      cidString = result.cid.toString();
-    } else {
-      throw new Error('Invalid CID format received from w3up');
-    }
+    // Pinata用のオプション設定
+    const options = {
+      pinataMetadata: {
+        name: `nft-image-${Date.now()}-${file.name}`,
+        keyvalues: {
+          type: 'nft-image',
+          originalName: file.name,
+          uploadDate: new Date().toISOString()
+        }
+      },
+      pinataOptions: {
+        cidVersion: 0
+      }
+    };
+
+    const result = await client.pinFileToIPFS(file, options);
+    const cidString = result.IpfsHash;
 
     // CID検証
     if (!isValidCID(cidString)) {
@@ -183,8 +163,8 @@ const realUploadToIPFS = async (file) => {
 
     console.log(`✅ File uploaded successfully!`);
     console.log(`📸 Image CID: ${cidString}`);
-    console.log(`📸 CID type: ${typeof result}`);
-    console.log(`📸 CID object:`, result);
+    console.log(`📸 File name: ${file.name}`);
+    console.log(`📸 Pinata result:`, result);
 
     // 複数のHTTPS URLを生成
     const urls = {
@@ -245,56 +225,40 @@ const realUploadToIPFS = async (file) => {
       alternativeUrls: urls
     };
   } catch (error) {
-    console.error('❌ w3up upload error:', error);
-
-    // 特定のエラーメッセージに基づく詳細な説明
-    if (error.message.includes('space/blob/add invocation')) {
-      console.error('🔐 w3up認証エラー: スペースにファイルを追加する権限がありません');
-      console.error('💡 解決方法:');
-      console.error('   1. https://console.storacha.network/ にアクセス');
-      console.error('   2. 同じメールアドレスでサインアップ/ログイン');
-      console.error('   3. スペースを認証してください');
-      throw new Error(`IPFS upload failed: Space permission denied. Please authenticate at https://console.storacha.network/`);
-    }
-
+    console.error('❌ Pinata upload error:', error);
     throw new Error(`IPFS upload failed: ${error.message}`);
   }
 };
 
 const realUploadMetadata = async (metadata) => {
   try {
-    console.log('🌍 Uploading metadata to w3up (Etherscan compatible)...');
+    console.log('🌍 Uploading metadata to Pinata (Etherscan compatible)...');
     console.log('📄 Metadata content:', JSON.stringify(metadata, null, 2));
 
-    const client = await initializeW3up();
+    const client = await initializePinata();
     if (!client) {
-      throw new Error('w3up client not available');
+      throw new Error('Pinata client not available');
     }
 
-    const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
-      type: 'application/json'
-    });
-
-    const metadataFile = new File([metadataBlob], 'metadata.json', {
-      type: 'application/json'
-    });
-
-    console.log(`📊 Metadata file size: ${metadataFile.size} bytes`);
     console.log('📤 Starting metadata upload...');
 
-    const result = await client.uploadFile(metadataFile);
+    // Pinata用のオプション設定
+    const options = {
+      pinataMetadata: {
+        name: `nft-metadata-${Date.now()}`,
+        keyvalues: {
+          type: 'nft-metadata',
+          nftName: metadata.name,
+          uploadDate: new Date().toISOString()
+        }
+      },
+      pinataOptions: {
+        cidVersion: 0
+      }
+    };
 
-    // CIDの安全な取得
-    let cidString;
-    if (typeof result === 'string') {
-      cidString = result;
-    } else if (result && typeof result.toString === 'function') {
-      cidString = result.toString();
-    } else if (result && result.cid) {
-      cidString = result.cid.toString();
-    } else {
-      throw new Error('Invalid metadata CID format received from w3up');
-    }
+    const result = await client.pinJSONToIPFS(metadata, options);
+    const cidString = result.IpfsHash;
 
     // CID検証
     if (!isValidCID(cidString)) {
@@ -303,8 +267,7 @@ const realUploadMetadata = async (metadata) => {
 
     console.log(`✅ Metadata uploaded successfully!`);
     console.log(`📄 Metadata CID: ${cidString}`);
-    console.log(`📄 CID type: ${typeof result}`);
-    console.log(`📄 CID object:`, result);
+    console.log(`📄 Pinata result:`, result);
 
     // Etherscan対応のHTTPS URLを生成（IPFS.ioを使用）
     const httpsUrl = generateEtherscanCompatibleUrl(cidString, 'ipfs_io');
@@ -569,10 +532,10 @@ export const isDevelopment = () => {
 };
 
 /**
- * w3up利用可能性チェック
+ * Pinata利用可能性チェック
  */
-export const isWeb3StorageAvailable = () => {
-  return !!process.env.REACT_APP_W3UP_EMAIL;
+export const isPinataAvailable = () => {
+  return !!(process.env.REACT_APP_PINATA_API_KEY && process.env.REACT_APP_PINATA_SECRET_KEY);
 };
 
 /**
@@ -582,10 +545,10 @@ export const isWeb3StorageAvailable = () => {
 export const getIPFSUploader = () => {
   console.log('🔍 IPFSサービス初期化中...');
 
-  // w3upが利用可能かチェック
-  if (isWeb3StorageAvailable()) {
-    console.log("🌍 w3up email found - Using REAL IPFS with Etherscan compatibility");
-    console.log('✅ 実際のIPFSストレージを使用します（w3up）');
+  // Pinataが利用可能かチェック
+  if (isPinataAvailable()) {
+    console.log("🌍 Pinata API keys found - Using REAL IPFS with Etherscan compatibility");
+    console.log('✅ 実際のIPFSストレージを使用します（Pinata）');
 
     // 実際のIPFSを優先、エラー時のみフォールバック
     return {
@@ -597,7 +560,7 @@ export const getIPFSUploader = () => {
           return result;
         } catch (error) {
           console.warn('⚠️ 実際のIPFSアップロードに失敗、モックにフォールバック');
-          console.error('w3up error:', error);
+          console.error('Pinata error:', error);
           return await mockUploadToIPFS(...args);
         }
       },
@@ -609,7 +572,7 @@ export const getIPFSUploader = () => {
           return result;
         } catch (error) {
           console.warn('⚠️ 実際のIPFSメタデータアップロードに失敗、モックにフォールバック');
-          console.error('w3up metadata error:', error);
+          console.error('Pinata metadata error:', error);
           return await mockUploadMetadata(...args);
         }
       },
@@ -621,24 +584,19 @@ export const getIPFSUploader = () => {
           return result;
         } catch (error) {
           console.warn('⚠️ 実際のIPFS NFTデータアップロードに失敗、モックにフォールバック');
-          console.error('w3up NFT data error:', error);
+          console.error('Pinata NFT data error:', error);
           return await mockUploadNFTData(...args);
         }
       }
     };
   } else {
-    console.log("❌ w3up email not configured. To use REAL IPFS:");
-    console.log("   1. Sign up at: https://console.storacha.network/");
-    console.log("   2. Add REACT_APP_W3UP_EMAIL=your_email@example.com to .env file");
-    console.log("   3. Follow email verification process");
-    console.log("   4. Authenticate your space in the browser");
+    console.log("❌ Pinata API keys not configured. To use REAL IPFS:");
+    console.log("   1. Sign up at: https://pinata.cloud/");
+    console.log("   2. Create API keys in your dashboard");
+    console.log("   3. Add REACT_APP_PINATA_API_KEY=your_api_key to .env file");
+    console.log("   4. Add REACT_APP_PINATA_SECRET_KEY=your_secret_key to .env file");
     console.log("🧪 Fallback: Using mock IPFS service");
     console.log('⚠️ モックIPFSサービスを使用します（実際のストレージではありません）');
-    console.log('');
-    console.log('🔐 w3up認証が必要な場合:');
-    console.log('   - ブラウザで https://console.storacha.network/ を開く');
-    console.log('   - 同じメールアドレスでログイン');
-    console.log('   - スペースを認証してください');
 
     return {
       uploadToIPFS: mockUploadToIPFS,
