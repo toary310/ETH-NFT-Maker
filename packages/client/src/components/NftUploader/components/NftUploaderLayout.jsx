@@ -6,7 +6,6 @@ import LoadingOverlay from './LoadingOverlay';
 import MintedNftDisplay from './MintedNftDisplay';
 import NetworkAlert from './NetworkAlert';
 import WalletConnection from './WalletConnection';
-const GemcaseButton = React.lazy(() => import('../../GemcaseButton/GemcaseButton'));
 
 /**
  * NFTアップローダーレイアウトコンポーネント
@@ -102,14 +101,12 @@ const NftUploaderLayout = ({
 
       {/* Gemcaseコレクションボタン（ウォレット接続時のみ） */}
       {currentAccount && (
-        <React.Suspense fallback={<div>Loading...</div>}>
-          <GemcaseButton
-            contractAddress={process.env.REACT_APP_CONTRACT_ADDRESS}
-            networkName={process.env.REACT_APP_NETWORK_NAME}
-            fullWidth={true}
-            sx={{ margin: '20px 0' }}
-          />
-        </React.Suspense>
+        <GemcaseButton
+          contractAddress={process.env.REACT_APP_CONTRACT_ADDRESS}
+          networkName={process.env.REACT_APP_NETWORK_NAME}
+          fullWidth={true}
+          sx={{ margin: '20px 0' }}
+        />
       )}
 
       {/* コントラクト情報（ウォレット接続時のみ） */}

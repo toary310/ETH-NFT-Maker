@@ -528,6 +528,10 @@ export const isDevelopment = () => {
  * GemcaseコレクションページのURLを生成
  */
 export const getGemcaseCollectionUrl = (contractAddress, networkName = 'sepolia') => {
+  console.log('🔍 Gemcase URL generation debug:');
+  console.log(`   Contract Address: ${contractAddress}`);
+  console.log(`   Network Name: ${networkName}`);
+
   if (!contractAddress) {
     console.warn('⚠️ Contract address not provided for Gemcase URL');
     return null;
@@ -543,10 +547,26 @@ export const getGemcaseCollectionUrl = (contractAddress, networkName = 'sepolia'
   };
 
   const gemcaseNetwork = networkMap[networkName.toLowerCase()] || 'sepolia';
-  const gemcaseUrl = `https://gemcase.vercel.app/collection/${gemcaseNetwork}/${contractAddress}`;
 
-  console.log(`🔗 Gemcase collection URL: ${gemcaseUrl}`);
-  return gemcaseUrl;
+  // 複数のURL形式を試す
+  const possibleUrls = [
+    `https://gemcase.vercel.app/collection/${gemcaseNetwork}/${contractAddress}`,
+    `https://gemcase.vercel.app/collections/${gemcaseNetwork}/${contractAddress}`,
+    `https://gemcase.vercel.app/${gemcaseNetwork}/collection/${contractAddress}`,
+    `https://gemcase.vercel.app/nft/${gemcaseNetwork}/${contractAddress}`,
+    `https://gemcase.vercel.app/contract/${gemcaseNetwork}/${contractAddress}`
+  ];
+
+  const primaryUrl = possibleUrls[0];
+
+  console.log(`🔗 Primary Gemcase URL: ${primaryUrl}`);
+  console.log(`   Network mapping: ${networkName} -> ${gemcaseNetwork}`);
+  console.log(`🔄 Alternative URLs available:`, possibleUrls.slice(1));
+
+  return {
+    primary: primaryUrl,
+    alternatives: possibleUrls.slice(1)
+  };
 };
 
 /**
