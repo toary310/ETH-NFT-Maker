@@ -1,14 +1,18 @@
 import './App.css';
 import NftUploader from './components/NftUploader/NftUploader';
 
-function App() {
+// 開発環境でEtherscanテストユーティリティを読み込み
+if (process.env.NODE_ENV === 'development') {
+  import('./utils/etherscanTestUtils');
+  import('./utils/etherscanDebugger');
+}
 
+function App() {
   return (
     <div className='App'>
-      <NftUploader></NftUploader>
+      <NftUploader />
     </div>
   );
 }
-
 
 export default App;
