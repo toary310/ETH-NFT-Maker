@@ -1,8 +1,19 @@
 {
   "version": 2,
   "name": "eth-nft-maker",
-  "buildCommand": "yarn workspace client build",
-  "outputDirectory": "build",
-  "installCommand": "yarn install",
-  "framework": null
+  "buildCommand": "cd packages/client && yarn build",
+  "outputDirectory": "packages/client/build",
+  "installCommand": "yarn install --frozen-lockfile",
+  "framework": null,
+  "functions": {
+    "packages/client/build/static/js/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
