@@ -1,25 +1,54 @@
+// 🛠️ Hardhat開発環境をインポート
 const hre = require("hardhat");
+// 📦 Ethers.jsライブラリをインポート（ブロックチェーンとの通信用）
 const { ethers } = hre;
 
 /**
- * Web3Mint NFT contract local test script with IPFS support
+ * 🧪 Web3Mint NFTコントラクト ローカルテストスクリプト（IPFS対応）
  *
- * Usage:
+ * 【このスクリプトの役割】
+ * このスクリプトは「コントラクトの品質検査官」のような役割を果たします。
+ * デプロイしたスマートコントラクトの全ての機能を体系的にテストし、
+ * 正常に動作することを確認します。本番環境にデプロイする前の
+ * 最終チェックとして使用されます。
+ *
+ * 【テスト項目】
+ * 1. 基本的なNFTミント機能
+ * 2. IPFS対応NFTミント機能
+ * 3. 所有者権限でのミント機能
+ * 4. エラーハンドリングの確認
+ * 5. メタデータの生成・取得
+ * 6. 管理者機能（価格変更、ミント停止等）
+ * 7. コントラクト残高の確認
+ *
+ * 【使用方法】
  * npx hardhat run scripts/run.js
+ *
+ * 【初心者向け解説】
+ * - テストスクリプト = コントラクトの動作確認プログラム
+ * - ローカルテスト = 自分のコンピューター上でのテスト
+ * - IPFS = 分散ファイルストレージシステム
+ * - ミント = NFTを新しく作成すること
+ * - メタデータ = NFTの詳細情報（名前、説明、画像など）
  */
 async function main() {
   try {
+    // 🏁 テスト開始の案内
     console.log("🧪 Starting Web3Mint NFT contract (IPFS supported) local test...");
 
-    // Get test accounts
+    // 👥 テスト用アカウントを取得
     const [owner, user1, user2] = await ethers.getSigners();
 
     console.log("📋 Test accounts:");
     console.log(`  Owner: ${await owner.getAddress()}`);
     console.log(`  User1: ${await user1.getAddress()}`);
     console.log(`  User2: ${await user2.getAddress()}`);
+    // 【テストアカウントとは？】
+    // - ローカル環境で自動生成される仮想アカウント
+    // - 無料のテストETHが付与されている
+    // - 異なる権限レベルでのテストが可能
 
-    // Deploy contract
+    // 🚀 コントラクトをデプロイ
     console.log("\n📦 Deploying Web3Mint contract...");
     const Web3Mint = await ethers.getContractFactory("Web3Mint");
     const nftContract = await Web3Mint.deploy();
@@ -28,7 +57,7 @@ async function main() {
     const contractAddress = await nftContract.getAddress();
     console.log(`✅ Contract address: ${contractAddress}`);
 
-    // Check initial contract state
+    // 🔍 初期状態のコントラクト情報を確認
     console.log("\n🔍 Contract information:");
     const name = await nftContract.name();
     const symbol = await nftContract.symbol();
@@ -46,19 +75,23 @@ async function main() {
     console.log(`  Next token ID: ${currentTokenId.toString()}`);
     console.log(`  Current total supply: ${totalSupply.toString()}`);
 
-    // Test metadata URIs
+    // 📝 テスト用のメタデータURIを準備
     const testMetadataURIs = [
       "https://example.com/metadata/1.json",
       "https://example.com/metadata/2.json",
       "https://example.com/metadata/3.json"
     ];
 
-    // Test IPFS hashes
+    // 🌐 テスト用のIPFSハッシュを準備
     const testIPFSHashes = [
-      "QmYFNwqT8eZ6FybqwYS8e1X2Zl5TQaB3hMxRbC7PvKdUfG",
-      "QmTWZGnCyQ9Xx4YvFpKhJe8MzLqNfPsRnK5WGbHdT6VcAe",
-      "QmDxMnKyH5fYQ3vFgCsLwT9WjPr6XeGcV4RoE2KyUpNzB8"
+      "QmYFNwqT8eZ6FybqwYS8e1X2Zl5TQaB3hMxRbC7PvKdUfG",  // 仮想的なIPFSハッシュ
+      "QmTWZGnCyQ9Xx4YvFpKhJe8MzLqNfPsRnK5WGbHdT6VcAe",  // テスト用のダミーデータ
+      "QmDxMnKyH5fYQ3vFgCsLwT9WjPr6XeGcV4RoE2KyUpNzB8"   // 実際のIPFSハッシュ形式
     ];
+    // 【IPFSハッシュとは？】
+    // - IPFSに保存されたファイルの一意識別子
+    // - "Qm"で始まる46文字の文字列
+    // - ファイルの内容から生成される（内容が同じなら同じハッシュ）
 
     console.log("\n🎨 Starting NFT minting tests...");
 

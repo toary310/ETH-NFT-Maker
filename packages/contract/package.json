@@ -1,7 +1,7 @@
 {
   "name": "contract",
   "version": "0.1.0",
-  "description": "UNCHAIN ETH NFT Maker contract",
+  "description": "? ETH NFT Maker - スマートコントラクト（初学者向け詳細コメント付き）",
   "private": true,
   "scripts": {
     "run:script": "npx hardhat run scripts/run.js",
