@@ -474,6 +474,14 @@ const realUploadNFTData = async (imageFile, name, description) => {
     console.log('  📄 メタデータIPFS URI:', metadataResult.ipfsUri);
     console.log('  📄 メタデータHTTPS URL:', metadataResult.httpsUrl);
 
+    // 🔍 Gemcase表示用デバッグ情報
+    console.log('🔍 Gemcase表示デバッグ情報:');
+    console.log('  📄 メタデータ内容確認:', JSON.stringify(metadata, null, 2));
+    console.log('  📸 画像URL確認:', metadata.image);
+    console.log('  🌐 画像URL形式:', metadata.image.startsWith('https://') ? 'HTTPS ✅' : 'その他 ❌');
+    console.log('  📄 メタデータURL確認:', metadataResult.httpsUrl);
+    console.log('  🌐 メタデータURL形式:', metadataResult.httpsUrl.startsWith('https://') ? 'HTTPS ✅' : 'その他 ❌');
+
     console.log('🎉 Etherscan-compatible NFT data upload completed!');
     console.log('🔗 Results Summary:');
     console.log(`  📸 Image HTTPS URL: ${imageResult.httpsUrl}`);
