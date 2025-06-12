@@ -1,30 +1,72 @@
 /**
- * Etherscan表示問題の詳細調査ツール
- * NFTがEtherscanで正しく表示されない問題を診断・解決するためのデバッグユーティリティ
+ * 🔍 Etherscan表示問題の詳細調査ツール
+ *
+ * 【このファイルの役割】
+ * このファイルは「NFT表示の探偵」のような役割を果たします。
+ * NFTがEtherscan（イーサリアムのブロックエクスプローラー）で正しく表示されない時に、
+ * 問題の原因を詳細に調査し、解決方法を提案するデバッグツールです。
+ *
+ * 【主な機能】
+ * 1. コントラクト基本情報の調査
+ * 2. メタデータアクセシビリティの確認
+ * 3. 画像ファイルの表示可能性チェック
+ * 4. IPFS伝播状況の監視
+ * 5. Etherscan互換性の評価
+ * 6. 問題の自動診断と解決提案
+ *
+ * 【なぜ必要なのか】
+ * - NFTが作成されてもEtherscanで表示されない場合がある
+ * - IPFS（分散ストレージ）の伝播に時間がかかることがある
+ * - メタデータの形式が正しくない場合がある
+ * - CORS（Cross-Origin Resource Sharing）の問題がある場合がある
+ *
+ * 【初心者向け解説】
+ * - Etherscan = イーサリアムブロックチェーンの情報を見るウェブサイト
+ * - メタデータ = NFTの詳細情報（名前、説明、画像URLなど）
+ * - IPFS = 分散型ファイル保存システム
+ * - CORS = ブラウザのセキュリティ機能（異なるドメイン間の通信制限）
  */
 
+// Ethereumブロックチェーンとの通信ライブラリをインポート
 import { ethers } from 'ethers';
+// スマートコントラクトの設計図（ABI）をインポート
 import Web3MintABI from './Web3Mint.json';
 
 /**
- * CORS回避用のフェッチ関数
+ * 🌐 CORS回避用のフェッチ関数
+ *
+ * 【この関数の役割】
+ * ブラウザのCORS制限を回避して、IPFS上のファイルにアクセスするための関数です。
+ * 複数のIPFSゲートウェイを順番に試行して、最も応答の良いものを使用します。
+ *
+ * 【CORSとは？】
+ * Cross-Origin Resource Sharing = 異なるドメイン間でのリソース共有制限
+ * ブラウザのセキュリティ機能で、悪意のあるサイトからの不正アクセスを防ぐ
+ *
+ * 【IPFSゲートウェイとは？】
+ * IPFS上のファイルにHTTPS経由でアクセスできるサービス
+ * 複数のプロバイダーが提供しており、速度や可用性が異なる
+ *
+ * @param {string} url - アクセス対象のURL
+ * @param {object} options - フェッチオプション
+ * @returns {Promise<Response>} フェッチレスポンス
  */
 const corsAwareFetch = async (url, options = {}) => {
-  // 複数のゲートウェイを試行
+  // 🌐 複数のIPFSゲートウェイを定義（信頼性の高い順）
   const gateways = [
-    'https://w3s.link/ipfs/',
-    'https://dweb.link/ipfs/',
-    'https://gateway.pinata.cloud/ipfs/',
-    'https://nftstorage.link/ipfs/',
-    'https://ipfs.io/ipfs/'
+    'https://w3s.link/ipfs/',              // Web3.Storage（高速・信頼性高）
+    'https://dweb.link/ipfs/',             // Protocol Labs公式
+    'https://gateway.pinata.cloud/ipfs/',  // Pinata（商用サービス）
+    'https://nftstorage.link/ipfs/',       // NFT.Storage（NFT特化）
+    'https://ipfs.io/ipfs/'                // 公式ゲートウェイ（最後の手段）
   ];
 
-  // URLからCIDを抽出
+  // 📂 URLからCID（Content Identifier）を抽出
   let cid = null;
   if (url.includes('/ipfs/')) {
     cid = url.split('/ipfs/')[1];
   } else {
-    // 直接URLを試行
+    // 🔗 IPFS URLでない場合は直接アクセスを試行
     try {
       return await fetch(url, {
         ...options,
@@ -39,7 +81,7 @@ const corsAwareFetch = async (url, options = {}) => {
     }
   }
 
-  // 各ゲートウェイを順次試行
+  // 🔄 各ゲートウェイを順次試行（フォールバック機能）
   for (const gateway of gateways) {
     const testUrl = `${gateway}${cid}`;
     console.log(`🧪 Trying gateway: ${testUrl}`);
@@ -65,7 +107,7 @@ const corsAwareFetch = async (url, options = {}) => {
     }
   }
 
-  // すべて失敗した場合
+  // ❌ すべてのゲートウェイで失敗した場合
   throw new Error('All IPFS gateways failed');
 };
 

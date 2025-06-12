@@ -1,9 +1,42 @@
+// Material-UIのアイコンをインポート
 import { Collections as CollectionsIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
+// Material-UIのUIコンポーネントをインポート
 import { Box, Button, Typography } from '@mui/material';
+// NFTマーケットプレイスのURL生成ユーティリティをインポート
 import { getNFTMarketplaceUrls } from '../../utils/ipfsService';
 
 /**
- * NFTマーケットプレイスへのリンクボタン群
+ * 🎨 NFTマーケットプレイス連携ボタン群コンポーネント
+ *
+ * 【このコンポーネントの役割】
+ * このコンポーネントは「NFTの展示場への案内係」のような役割を果たします。
+ * 作成したNFTを様々なマーケットプレイス（OpenSea、Gemcase等）で
+ * 確認できるリンクボタンを提供し、ユーザーが簡単にNFTを閲覧できるようにします。
+ *
+ * 【NFTマーケットプレイスとは？】
+ * - NFTを売買・展示・閲覧できるオンラインプラットフォーム
+ * - OpenSea = 世界最大のNFTマーケットプレイス
+ * - Gemcase = 美しいUIでNFTを表示するプラットフォーム
+ * - Etherscan = ブロックチェーンエクスプローラー（技術的な詳細確認用）
+ *
+ * 【主な機能】
+ * 1. 複数のマーケットプレイスへのリンク生成
+ * 2. 代替URLの提供（404エラー対策）
+ * 3. 美しいボタンデザインとアニメーション
+ * 4. レスポンシブ対応
+ * 5. エラーハンドリング
+ *
+ * 【初心者向け解説】
+ * - props = 親コンポーネントから受け取る設定値
+ * - contractAddress = NFTコントラクトのアドレス（住所のようなもの）
+ * - networkName = ブロックチェーンネットワークの名前
+ *
+ * @param {string} contractAddress - NFTコントラクトのアドレス
+ * @param {string} networkName - ネットワーク名（デフォルト: 'sepolia'）
+ * @param {string} variant - ボタンのスタイル
+ * @param {string} size - ボタンのサイズ
+ * @param {boolean} fullWidth - 全幅表示するかどうか
+ * @param {object} sx - 追加のスタイル設定
  */
 const MarketplaceButtons = ({
   contractAddress,
@@ -13,26 +46,34 @@ const MarketplaceButtons = ({
   fullWidth = false,
   sx = {}
 }) => {
+
+  // 🎯 マーケットプレイスボタンクリック時の処理関数
   const handleMarketplaceClick = (platform) => {
+    // 🖥️ デバッグ情報をコンソールに出力
     console.log(`🎯 ${platform} button clicked!`);
     console.log(`   Props - contractAddress: ${contractAddress}`);
     console.log(`   Props - networkName: ${networkName}`);
 
+    // 🔗 マーケットプレイスURLを生成
     const urls = getNFTMarketplaceUrls(contractAddress, networkName);
 
+    // ❌ URL生成に失敗した場合のエラーハンドリング
     if (!urls) {
       console.error('❌ Failed to generate marketplace URLs');
       return;
     }
 
-    let targetUrl;
-    let alternativeUrls = [];
+    // 📍 プラットフォームごとの処理変数
+    let targetUrl;           // メインのURL
+    let alternativeUrls = []; // 代替URL（404エラー時の予備）
 
+    // 🔀 プラットフォームごとの処理分岐
     switch (platform) {
       case 'opensea':
+        // 🌊 OpenSea（世界最大のNFTマーケットプレイス）
         if (Array.isArray(urls.opensea)) {
-          targetUrl = urls.opensea[0];
-          alternativeUrls = urls.opensea.slice(1);
+          targetUrl = urls.opensea[0];           // 最初のURLをメインに
+          alternativeUrls = urls.opensea.slice(1); // 残りを代替URLに
         } else {
           targetUrl = urls.opensea;
         }
@@ -41,32 +82,41 @@ const MarketplaceButtons = ({
           console.log('💡 Alternative OpenSea URLs:', alternativeUrls);
         }
         break;
+
       case 'gemcase':
-        targetUrl = urls.gemcase[0]; // プライマリGemcase URL
-        alternativeUrls = urls.gemcase.slice(1);
+        // 💎 Gemcase（美しいUIのNFTビューアー）
+        targetUrl = urls.gemcase[0];           // プライマリGemcase URL
+        alternativeUrls = urls.gemcase.slice(1); // 代替URL
         console.log('💎 Opening Gemcase:', targetUrl);
         console.log('💡 Alternative Gemcase URLs:', alternativeUrls);
         break;
+
       case 'etherscan':
+        // 🔍 Etherscan（ブロックチェーンエクスプローラー）
         targetUrl = urls.etherscan;
         console.log('🔍 Opening Etherscan:', targetUrl);
         break;
+
       case 'search':
-        // 検索URLを複数開く
+        // 🔍 検索機能（複数のマーケットプレイスで検索）
         const searchUrl = urls.search.opensea_testnet_search;
         targetUrl = searchUrl;
         console.log('🔍 Opening marketplace search:', targetUrl);
         console.log('💡 Other search options:', urls.search);
         break;
+
       default:
+        // ❌ 未知のプラットフォーム
         console.error('❌ Unknown platform:', platform);
         return;
     }
 
+    // 🌐 新しいタブでURLを開く
     if (targetUrl) {
+      // セキュリティ設定付きで新しいタブを開く
       window.open(targetUrl, '_blank', 'noopener,noreferrer');
 
-      // 代替URLがある場合は5秒後に案内
+      // 💡 代替URLがある場合は3秒後にコンソールで案内
       if (alternativeUrls.length > 0) {
         setTimeout(() => {
           console.log(`💡 ${platform}で404が表示された場合は、以下の代替URLを試してください:`);

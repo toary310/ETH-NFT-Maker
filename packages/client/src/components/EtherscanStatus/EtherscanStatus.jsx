@@ -1,54 +1,91 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { validateEtherscanNFTDisplay, convertIpfsToHttps } from '../../utils/mockIPFS';
+// Reactの機能をインポート
+import { useCallback, useEffect, useState } from 'react';
+// IPFS関連のユーティリティ関数をインポート
+import { validateEtherscanNFTDisplay } from '../../utils/mockIPFS';
 
 /**
- * Etherscan表示ステータスコンポーネント - React 19対応版
- * NFTのEtherscan表示互換性をリアルタイムで監視・表示
+ * 🔍 Etherscan表示ステータス監視コンポーネント
+ *
+ * 【このコンポーネントの役割】
+ * このコンポーネントは「NFTの表示品質チェッカー」のような役割を果たします。
+ * 作成したNFTがEtherscan（イーサリアムのブロックエクスプローラー）で
+ * 正しく表示されるかどうかをリアルタイムで監視・確認します。
+ *
+ * 【Etherscanとは？】
+ * - イーサリアムブロックチェーンの「図書館」のような存在
+ * - トランザクション、アドレス、NFTなどの情報を検索・表示
+ * - NFTの画像やメタデータも表示される
+ * - 多くの人がNFTの確認に使用する重要なサービス
+ *
+ * 【主な機能】
+ * 1. NFTメタデータのアクセス可能性チェック
+ * 2. 画像ファイルの表示可能性チェック
+ * 3. HTTPS形式での提供確認
+ * 4. IPFS伝播状況の監視
+ * 5. 自動再チェック機能（5分間隔）
+ *
+ * 【初心者向け解説】
+ * - メタデータ = NFTの詳細情報（名前、説明、画像URLなど）
+ * - IPFS伝播 = ファイルが世界中のIPFSノードに広がること
+ * - HTTPS = セキュアなウェブ通信プロトコル
+ *
+ * @param {string} tokenUri - チェック対象のNFTメタデータURI
+ * @param {function} onStatusUpdate - 親コンポーネントへの状態通知関数
  */
 const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
+
+  // 📊 チェック状況の状態管理
   const [status, setStatus] = useState({
-    isChecking: false,
-    isCompatible: null,
-    lastChecked: null,
-    details: null,
-    error: null
+    isChecking: false,      // 現在チェック中かどうか
+    isCompatible: null,     // Etherscan互換性（true/false/null）
+    lastChecked: null,      // 最後にチェックした時刻
+    details: null,          // 詳細なチェック結果
+    error: null             // エラー情報
   });
 
-  // Etherscan互換性チェック
+  // 🔍 Etherscan互換性チェック関数
+  // useCallbackで最適化（不要な再作成を防ぐ）
   const checkCompatibility = useCallback(async () => {
+    // 📋 事前チェック：tokenUriが存在するか確認
     if (!tokenUri) return;
 
     try {
+      // 🏁 チェック開始：状態を「チェック中」に更新
       setStatus(prev => ({ ...prev, isChecking: true, error: null }));
-      
+
+      // 🔍 実際の互換性検証を実行
       const validation = await validateEtherscanNFTDisplay(tokenUri);
-      
+
+      // 📊 チェック結果をまとめる
       const newStatus = {
-        isChecking: false,
-        isCompatible: validation.isEtherscanCompatible,
-        lastChecked: new Date(),
-        details: validation,
-        error: null
+        isChecking: false,                              // チェック完了
+        isCompatible: validation.isEtherscanCompatible, // 互換性結果
+        lastChecked: new Date(),                        // チェック時刻
+        details: validation,                            // 詳細結果
+        error: null                                     // エラーなし
       };
-      
+
+      // 📈 状態を更新
       setStatus(newStatus);
-      
-      // 親コンポーネントに結果を通知
+
+      // 📡 親コンポーネントに結果を通知
       if (onStatusUpdate) {
         onStatusUpdate(newStatus);
       }
-      
+
     } catch (error) {
+      // ❌ エラーが発生した場合の処理
       const errorStatus = {
-        isChecking: false,
-        isCompatible: false,
-        lastChecked: new Date(),
-        details: null,
-        error: error.message
+        isChecking: false,          // チェック完了（エラーで）
+        isCompatible: false,        // 互換性なし
+        lastChecked: new Date(),    // エラー発生時刻
+        details: null,              // 詳細なし
+        error: error.message        // エラーメッセージ
       };
-      
+
       setStatus(errorStatus);
-      
+
+      // 📡 親コンポーネントにエラー状況を通知
       if (onStatusUpdate) {
         onStatusUpdate(errorStatus);
       }
@@ -60,10 +97,10 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
     if (tokenUri) {
       // 初回チェック
       checkCompatibility();
-      
+
       // 5分ごとに再チェック（IPFS伝播監視）
       const interval = setInterval(checkCompatibility, 5 * 60 * 1000);
-      
+
       return () => clearInterval(interval);
     }
   }, [tokenUri, checkCompatibility]);
@@ -79,7 +116,7 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
         text: '検証中...'
       };
     }
-    
+
     if (status.error) {
       return {
         color: '#d32f2f',
@@ -89,7 +126,7 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
         text: 'エラー'
       };
     }
-    
+
     if (status.isCompatible === true) {
       return {
         color: '#2e7d32',
@@ -99,7 +136,7 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
         text: 'Etherscan表示対応'
       };
     }
-    
+
     if (status.isCompatible === false) {
       return {
         color: '#d84315',
@@ -109,7 +146,7 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
         text: '表示未確認'
       };
     }
-    
+
     return {
       color: '#666',
       backgroundColor: '#f5f5f5',
@@ -145,7 +182,7 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
           <span>{displayInfo.icon}</span>
           <span>{displayInfo.text}</span>
         </div>
-        
+
         <button
           onClick={checkCompatibility}
           disabled={status.isChecking}
@@ -175,18 +212,18 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
           <div style={{ marginBottom: '6px' }}>
             <strong>🔗 HTTPS形式:</strong> {status.details.imageIsHttps ? '✅ 対応' : '❌ 非対応'}
           </div>
-          
+
           {status.details.alternativeImageUrl && (
-            <div style={{ 
-              marginTop: '8px', 
-              padding: '6px', 
-              backgroundColor: 'rgba(255,255,255,0.7)', 
+            <div style={{
+              marginTop: '8px',
+              padding: '6px',
+              backgroundColor: 'rgba(255,255,255,0.7)',
               borderRadius: '4px',
               fontSize: '0.8em'
             }}>
               <strong>🔧 代替URL:</strong>
-              <div style={{ 
-                wordBreak: 'break-all', 
+              <div style={{
+                wordBreak: 'break-all',
                 fontFamily: 'monospace',
                 marginTop: '2px'
               }}>
@@ -199,8 +236,8 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
 
       {/* エラー情報 */}
       {status.error && (
-        <div style={{ 
-          fontSize: '0.85em', 
+        <div style={{
+          fontSize: '0.85em',
           color: '#d32f2f',
           marginTop: '8px',
           padding: '6px',
@@ -213,9 +250,9 @@ const EtherscanStatus = ({ tokenUri, onStatusUpdate }) => {
 
       {/* 最終チェック時刻 */}
       {status.lastChecked && (
-        <div style={{ 
-          fontSize: '0.75em', 
-          color: '#888', 
+        <div style={{
+          fontSize: '0.75em',
+          color: '#888',
           marginTop: '8px',
           textAlign: 'right'
         }}>

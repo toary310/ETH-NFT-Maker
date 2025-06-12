@@ -1,67 +1,109 @@
 /**
- * Etherscan表示テスト用ユーティリティ
- * NFTがEtherscanで正しく表示されるかテストするためのツール群
+ * 🧪 Etherscan表示テスト用ユーティリティ
+ *
+ * 【このファイルの役割】
+ * このファイルは「NFT表示の品質検査官」のような役割を果たします。
+ * 作成されたNFTがEtherscan（イーサリアムのブロックエクスプローラー）で
+ * 正しく表示されるかどうかを包括的にテストし、問題があれば解決方法を提案します。
+ *
+ * 【テスト項目】
+ * 1. コントラクト接続テスト - ブロックチェーンからの情報取得確認
+ * 2. メタデータ取得テスト - NFTの詳細情報アクセス確認
+ * 3. 画像アクセステスト - 画像ファイルの表示可能性確認
+ * 4. Etherscan互換性テスト - 表示形式の適合性確認
+ * 5. IPFS伝播テスト - 分散ストレージでの可用性確認
+ *
+ * 【なぜ必要なのか】
+ * - NFTを作成してもEtherscanで表示されない場合がある
+ * - IPFS（分散ストレージ）の伝播に時間がかかることがある
+ * - メタデータの形式が正しくない場合がある
+ * - 画像URLがアクセスできない場合がある
+ *
+ * 【初心者向け解説】
+ * - Etherscan = イーサリアムブロックチェーンの情報を見るウェブサイト
+ * - メタデータ = NFTの詳細情報（名前、説明、画像URLなど）
+ * - IPFS = 分散型ファイル保存システム
+ * - 伝播 = ファイルが世界中のサーバーに広がること
  */
 
+// Ethereumブロックチェーンとの通信ライブラリをインポート
 import { ethers } from 'ethers';
+// スマートコントラクトの設計図（ABI）をインポート
 import Web3MintABI from './Web3Mint.json';
 
 /**
- * 🧪 Etherscan表示テスト実行
- * @param {string} contractAddress - NFTコントラクトアドレス
+ * 🧪 Etherscan表示テスト実行関数
+ *
+ * 【この関数の役割】
+ * NFTがEtherscanで正しく表示されるかどうかを包括的にテストします。
+ * 5つの異なるテストを順番に実行し、総合的な評価と改善提案を提供します。
+ *
+ * 【テストの流れ】
+ * 1. コントラクト接続 → 2. メタデータ取得 → 3. 画像アクセス → 4. 互換性チェック → 5. IPFS伝播確認
+ *
+ * @param {string} contractAddress - NFTコントラクトのアドレス
  * @param {string} tokenId - テスト対象のトークンID
- * @returns {Promise<Object>} テスト結果
+ * @returns {Promise<Object>} 詳細なテスト結果オブジェクト
  */
 export const runEtherscanDisplayTest = async (contractAddress, tokenId) => {
+  // 🏁 テスト開始の案内
   console.log('🧪 Etherscan表示テスト開始');
   console.log('==========================================');
   console.log('📋 Contract:', contractAddress);
   console.log('🏷️ Token ID:', tokenId);
 
+  // 📊 テスト結果を格納するオブジェクト
   const testResults = {
-    timestamp: new Date().toISOString(),
-    contractAddress,
-    tokenId,
-    tests: [],
-    overallStatus: 'PENDING',
-    etherscanCompatibility: false,
-    recommendations: []
+    timestamp: new Date().toISOString(),    // テスト実行時刻
+    contractAddress,                        // テスト対象のコントラクトアドレス
+    tokenId,                               // テスト対象のトークンID
+    tests: [],                             // 各テストの詳細結果
+    overallStatus: 'PENDING',              // 総合評価
+    etherscanCompatibility: false,         // Etherscan互換性
+    recommendations: []                    // 改善提案
   };
 
   try {
-    // Test 1: コントラクト接続テスト
+    // 🧪 Test 1: コントラクト接続テスト
+    // ブロックチェーンからNFTの基本情報を取得できるかテスト
     const contractTest = await testContractConnection(contractAddress, tokenId);
     testResults.tests.push(contractTest);
 
-    // Test 2: メタデータ取得テスト
+    // 🧪 Test 2: メタデータ取得テスト
+    // NFTのメタデータ（詳細情報）にアクセスできるかテスト
     const tokenURI = contractTest.data?.tokenURI || contractTest.tokenURI;
     console.log('🔍 Test 1からのtokenURI:', tokenURI);
     const metadataTest = await testMetadataRetrieval(tokenURI);
     testResults.tests.push(metadataTest);
 
-    // Test 3: 画像アクセステスト
+    // 🧪 Test 3: 画像アクセステスト
+    // NFTの画像ファイルにアクセスできるかテスト
     const imageTest = await testImageAccess(metadataTest.metadata?.image);
     testResults.tests.push(imageTest);
 
-    // Test 4: Etherscan互換性テスト
+    // 🧪 Test 4: Etherscan互換性テスト
+    // メタデータがEtherscanの表示要件を満たしているかテスト
     const compatibilityTest = await testEtherscanCompatibility(metadataTest.metadata);
     testResults.tests.push(compatibilityTest);
 
-    // Test 5: IPFS伝播テスト
+    // 🧪 Test 5: IPFS伝播テスト
+    // IPFSネットワークでファイルが適切に伝播しているかテスト
     const ipfsTest = await testIPFSPropagation(metadataTest.metadata?.image);
     testResults.tests.push(ipfsTest);
 
-    // 総合評価
+    // 📊 総合評価の算出
     testResults.overallStatus = evaluateOverallStatus(testResults.tests);
     testResults.etherscanCompatibility = compatibilityTest.passed;
     testResults.recommendations = generateRecommendations(testResults.tests);
 
   } catch (error) {
+    // ❌ テスト実行中にエラーが発生した場合の処理
     console.error('❌ テスト実行エラー:', error);
     testResults.overallStatus = 'ERROR';
     testResults.error = error.message;
   }
 
+  // 🏁 テスト完了の案内
   console.log('📊 テスト完了');
   console.log('==========================================');
 

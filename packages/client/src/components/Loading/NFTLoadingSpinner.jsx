@@ -1,1 +1,183 @@
-import React from 'react';\nimport { Box, CircularProgress, Typography, Fade } from '@mui/material';\n\n/**\n * React 19 Suspense対応 ローディングコンポーネント\n * NFTアプリ専用のローディングUI\n */\nconst NFTLoadingSpinner = ({ \n  message = 'Loading...', \n  size = 60, \n  showMessage = true,\n  fullScreen = false \n}) => {\n  const LoadingContent = () => (\n    <Fade in timeout={300}>\n      <Box\n        display=\"flex\"\n        flexDirection=\"column\"\n        alignItems=\"center\"\n        justifyContent=\"center\"\n        gap={2}\n        p={3}\n      >\n        <Box position=\"relative\">\n          <CircularProgress \n            size={size} \n            thickness={4}\n            style={{ color: '#1976d2' }}\n          />\n          <Box\n            position=\"absolute\"\n            top={0}\n            left={0}\n            bottom={0}\n            right={0}\n            display=\"flex\"\n            alignItems=\"center\"\n            justifyContent=\"center\"\n          >\n            <Typography\n              variant=\"caption\"\n              component=\"div\"\n              style={{ fontSize: '1.5rem' }}\n            >\n              🖼️\n            </Typography>\n          </Box>\n        </Box>\n        \n        {showMessage && (\n          <Typography \n            variant=\"h6\" \n            color=\"textSecondary\"\n            style={{ \n              fontWeight: 500,\n              animation: 'pulse 2s infinite'\n            }}\n          >\n            {message}\n          </Typography>\n        )}\n        \n        <Typography \n          variant=\"body2\" \n          color=\"textSecondary\"\n          style={{ opacity: 0.7 }}\n        >\n          NFTの準備をしています...\n        </Typography>\n        \n        <style jsx>{`\n          @keyframes pulse {\n            0% { opacity: 1; }\n            50% { opacity: 0.5; }\n            100% { opacity: 1; }\n          }\n        `}</style>\n      </Box>\n    </Fade>\n  );\n\n  if (fullScreen) {\n    return (\n      <Box\n        position=\"fixed\"\n        top={0}\n        left={0}\n        right={0}\n        bottom={0}\n        bgcolor=\"rgba(255, 255, 255, 0.9)\"\n        display=\"flex\"\n        alignItems=\"center\"\n        justifyContent=\"center\"\n        zIndex={9999}\n        style={{ backdropFilter: 'blur(4px)' }}\n      >\n        <LoadingContent />\n      </Box>\n    );\n  }\n\n  return (\n    <Box\n      minHeight=\"200px\"\n      display=\"flex\"\n      alignItems=\"center\"\n      justifyContent=\"center\"\n    >\n      <LoadingContent />\n    </Box>\n  );\n};\n\n// 特定用途のローディングコンポーネント\nexport const WalletLoadingSpinner = () => (\n  <NFTLoadingSpinner \n    message=\"ウォレットに接続中...\" \n    size={50}\n  />\n);\n\nexport const ContractLoadingSpinner = () => (\n  <NFTLoadingSpinner \n    message=\"コントラクト情報を取得中...\" \n    size={40}\n  />\n);\n\nexport const IPFSLoadingSpinner = () => (\n  <NFTLoadingSpinner \n    message=\"IPFSにアップロード中...\" \n    size={50}\n  />\n);\n\nexport const TransactionLoadingSpinner = () => (\n  <NFTLoadingSpinner \n    message=\"トランザクション処理中...\" \n    size={60}\n    fullScreen\n  />\n);\n\nexport default NFTLoadingSpinner;
+// Reactライブラリをインポート
+// Material-UIのコンポーネントをインポート
+import { Box, CircularProgress, Fade, Typography } from '@mui/material';
+
+/**
+ * ⏳ NFTアプリケーション専用ローディングスピナーコンポーネント
+ *
+ * 【このコンポーネントの役割】
+ * このコンポーネントは「待機中の案内係」のような役割を果たします。
+ * ユーザーが何かの処理を待っている間に、美しいアニメーションと
+ * 分かりやすいメッセージで「今何をしているか」を伝えます。
+ *
+ * 【ローディングUIの重要性】
+ * - ユーザーに処理が進行中であることを伝える
+ * - 不安や混乱を防ぐ
+ * - アプリが固まっていないことを示す
+ * - 処理時間の体感を短くする
+ *
+ * 【主な機能】
+ * 1. 美しい円形プログレスアニメーション
+ * 2. カスタマイズ可能なメッセージ表示
+ * 3. フルスクリーンモード対応
+ * 4. フェードイン/アウトアニメーション
+ * 5. NFTアイコン付きデザイン
+ *
+ * 【React 19 Suspense対応】
+ * - 新しいReactの非同期処理機能に対応
+ * - スムーズなローディング体験を提供
+ *
+ * @param {string} message - 表示するメッセージ
+ * @param {number} size - スピナーのサイズ（ピクセル）
+ * @param {boolean} showMessage - メッセージを表示するかどうか
+ * @param {boolean} fullScreen - フルスクリーン表示するかどうか
+ */
+const NFTLoadingSpinner = ({
+  message = 'Loading...',
+  size = 60,
+  showMessage = true,
+  fullScreen = false
+}) => {
+
+  // 🎨 ローディングコンテンツの内部コンポーネント
+  const LoadingContent = () => (
+    <Fade in timeout={300}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        gap={2}
+        p={3}
+      >
+        {/* 🔄 メインのローディングスピナー */}
+        <Box position="relative">
+          <CircularProgress
+            size={size}
+            thickness={4}
+            style={{ color: '#1976d2' }}
+          />
+          {/* 🖼️ 中央のNFTアイコン */}
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            bottom={0}
+            right={0}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Typography
+              variant="caption"
+              component="div"
+              style={{ fontSize: '1.5rem' }}
+            >
+              🖼️
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* 📝 メインメッセージ（オプション） */}
+        {showMessage && (
+          <Typography
+            variant="h6"
+            color="textSecondary"
+            style={{
+              fontWeight: 500,
+              animation: 'pulse 2s infinite'
+            }}
+          >
+            {message}
+          </Typography>
+        )}
+
+        {/* 💬 サブメッセージ */}
+        <Typography
+          variant="body2"
+          color="textSecondary"
+          style={{ opacity: 0.7 }}
+        >
+          NFTの準備をしています...
+        </Typography>
+
+        {/* 🎭 CSSアニメーション定義 */}
+        <style jsx>{`
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+          }
+        `}</style>
+      </Box>
+    </Fade>
+  );
+
+  // 🖥️ フルスクリーンモードの場合
+  if (fullScreen) {
+    return (
+      <Box
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bgcolor="rgba(255, 255, 255, 0.9)"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        zIndex={9999}
+        style={{ backdropFilter: 'blur(4px)' }}
+      >
+        <LoadingContent />
+      </Box>
+    );
+  }
+
+  // 📦 通常モードの場合
+  return (
+    <Box
+      minHeight="200px"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <LoadingContent />
+    </Box>
+  );
+};
+
+// 🔐 ウォレット接続専用ローディングスピナー
+export const WalletLoadingSpinner = () => (
+  <NFTLoadingSpinner
+    message="ウォレットに接続中..."
+    size={50}
+  />
+);
+
+// 📄 コントラクト情報取得専用ローディングスピナー
+export const ContractLoadingSpinner = () => (
+  <NFTLoadingSpinner
+    message="コントラクト情報を取得中..."
+    size={40}
+  />
+);
+
+// 🌐 IPFSアップロード専用ローディングスピナー
+export const IPFSLoadingSpinner = () => (
+  <NFTLoadingSpinner
+    message="IPFSにアップロード中..."
+    size={50}
+  />
+);
+
+// 💰 トランザクション処理専用ローディングスピナー（フルスクリーン）
+export const TransactionLoadingSpinner = () => (
+  <NFTLoadingSpinner
+    message="トランザクション処理中..."
+    size={60}
+    fullScreen
+  />
+);
+
+export default NFTLoadingSpinner;

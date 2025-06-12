@@ -1,79 +1,116 @@
-import { ethers } from 'ethers';
-import { useCallback, useState, useTransition } from 'react';
-import Web3Mint from '../../../utils/Web3Mint.json';
-import { getIPFSUploader } from '../../../utils/ipfsService';
+// 必要なライブラリをインポート
+import { ethers } from 'ethers'; // Ethereumブロックチェーンとの通信ライブラリ
+import { useCallback, useState, useTransition } from 'react'; // Reactの機能（フック）
+import Web3Mint from '../../../utils/Web3Mint.json'; // スマートコントラクトの設計図（ABI）
+import { getIPFSUploader } from '../../../utils/ipfsService'; // IPFS（分散ストレージ）サービス
 
 /**
- * NFTミント処理用カスタムフック
- * 責務：
- * - NFTミント処理の管理
- * - 進捗状態の管理
- * - エラーハンドリング
+ * 🎨 NFTミント（作成）処理用カスタムフック
+ *
+ * 【このフックの役割】
+ * このフックは「NFT工場の管理者」のような役割を果たします。
+ * ユーザーが画像ファイルを持ってきたら、以下の工程を順番に管理します：
+ * 1. 画像をIPFS（分散ストレージ）にアップロード
+ * 2. スマートコントラクトを呼び出してNFTを作成
+ * 3. ブロックチェーンに記録されるまで待機
+ * 4. 完成したNFTの情報を整理して返却
+ *
+ * 【主な責務（やること）】
+ * - NFTミント処理の全体管理 - 工程の進行管理
+ * - 進捗状態の管理 - 「今何をしているか」をユーザーに表示
+ * - エラーハンドリング - 問題が起きた時の対処
+ *
+ * 【初心者向け解説】
+ * - ミント = NFTを新しく作成すること（鋳造という意味）
+ * - フック = Reactで状態や処理を管理する仕組み
+ * - IPFS = 分散型のファイル保存システム（画像データを保存）
+ * - スマートコントラクト = ブロックチェーン上で動くプログラム
  */
 const useNftMinting = () => {
+
+  // 🔄 React 18の新機能：useTransition
+  // 重い処理を行う時に、UIの応答性を保つための機能
+  // isPending = 処理中かどうかの状態、startTransition = 処理を開始する関数
   const [isPending, startTransition] = useTransition();
 
-  const [uploading, setUploading] = useState(false);
-  const [loadingStep, setLoadingStep] = useState('');
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [mintedNftInfo, setMintedNftInfo] = useState(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  // 📊 状態管理：アプリの「今の状況」を記録する変数たち
+  const [uploading, setUploading] = useState(false);           // アップロード中かどうか
+  const [loadingStep, setLoadingStep] = useState('');          // 現在の処理ステップ（「アップロード中」など）
+  const [loadingProgress, setLoadingProgress] = useState(0);   // 進捗パーセンテージ（0-100）
+  const [mintedNftInfo, setMintedNftInfo] = useState(null);    // 作成完了したNFTの詳細情報
+  const [error, setError] = useState('');                      // エラーメッセージ
+  const [success, setSuccess] = useState('');                  // 成功メッセージ
 
-  // コントラクトアドレス
+  // 🏠 コントラクトアドレスとネットワーク設定
+  // 環境変数から取得、設定されていない場合はデフォルト値を使用
   const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS ||
-    '0x590D13672DDB149A4602989A7B3B7D35a082B433';
-  const NETWORK_NAME = process.env.REACT_APP_NETWORK_NAME || 'sepolia';
+    '0x590D13672DDB149A4602989A7B3B7D35a082B433';  // Sepoliaテストネットのコントラクトアドレス
+  const NETWORK_NAME = process.env.REACT_APP_NETWORK_NAME || 'sepolia';  // ネットワーク名
 
-  // 進捗更新
+  // 📈 進捗更新関数
+  // ユーザーに「今何をしているか」を表示するための関数
+  // useCallbackで最適化（不要な再作成を防ぐ）
   const updateProgress = useCallback((step, progress) => {
-    setLoadingStep(step);
-    setLoadingProgress(progress);
+    setLoadingStep(step);      // 現在のステップを更新（例：「アップロード中...」）
+    setLoadingProgress(progress);  // 進捗パーセンテージを更新（例：50）
   }, []);
 
-  // NFTミント処理
+  // 🎨 メインのNFTミント（作成）処理関数
+  // この関数は「NFT工場の全工程」を管理する重要な関数です
   const mintNFT = useCallback(async (file, currentAccount) => {
+
+    // 📋 事前チェック：必要な材料が揃っているか確認
     if (!file || !currentAccount) {
       throw new Error('ファイルまたはアカウントが指定されていません');
     }
 
     try {
-      setUploading(true);
-      setError('');
-      setSuccess('');
-      updateProgress('ミント処理を開始しています...', 0);
+      // 🏁 処理開始：状態をリセットして準備
+      setUploading(true);        // アップロード中フラグをON
+      setError('');              // 前回のエラーメッセージをクリア
+      setSuccess('');            // 前回の成功メッセージをクリア
+      updateProgress('ミント処理を開始しています...', 0);  // 進捗0%でスタート
 
-      // 1. IPFSアップロード
-      updateProgress('IPFSに画像をアップロード中...', 20);
-      const ipfsUploader = getIPFSUploader();
+      // 🌐 ステップ1：IPFSアップロード
+      // IPFSは分散型のファイル保存システム。画像ファイルをここに保存します
+      updateProgress('IPFSに画像をアップロード中...', 20);  // 進捗20%
+      const ipfsUploader = getIPFSUploader();  // IPFSアップローダーを取得
 
-      const fileName = file.name.replace(/\.[^/.]+$/, ""); // 拡張子を除去
+      // ファイル名から拡張子を除去（例：「cat.jpg」→「cat」）
+      const fileName = file.name.replace(/\.[^/.]+$/, "");
+
+      // 実際にIPFSにファイルをアップロード
+      // uploadNFTDataは画像ファイル、名前、説明を受け取ってIPFS URIを返します
       const metadataURI = await ipfsUploader.uploadNFTData(
-        file,
-        fileName,
-        `${fileName} - Created with NFT Maker`
+        file,                                      // アップロードする画像ファイル
+        fileName,                                  // NFTの名前
+        `${fileName} - Created with NFT Maker`     // NFTの説明文
       );
 
-      updateProgress('スマートコントラクトを呼び出し中...', 60);
+      updateProgress('スマートコントラクトを呼び出し中...', 60);  // 進捗60%
 
-      // 2. スマートコントラクト呼び出し
-      const { ethereum } = window;
+      // 🔗 ステップ2：スマートコントラクトとの接続準備
+      // MetaMaskを通じてブロックチェーンに接続します
+      const { ethereum } = window;  // ブラウザのMetaMask拡張機能を取得
       if (!ethereum) {
         throw new Error('MetaMaskが見つかりません');
       }
 
-      const provider = new ethers.BrowserProvider(ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, Web3Mint.abi, signer);
+      // Ethereumネットワークへの接続を確立
+      const provider = new ethers.BrowserProvider(ethereum);  // ネットワークへの接続
+      const signer = await provider.getSigner();              // トランザクション署名者（ユーザー）
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, Web3Mint.abi, signer);  // コントラクトインスタンス
 
-      // コントラクト状態を詳細確認
-      const mintingEnabled = await contract.mintingEnabled();
-      const mintPrice = await contract.mintPrice();
-      const currentSupply = await contract.totalSupply();
-      const maxSupply = await contract.MAX_SUPPLY();
-      const currentTokenId = await contract.getCurrentTokenId();
-      const contractBalance = await contract.getContractBalance();
+      // 📊 ステップ3：コントラクトの現在状態を詳細確認
+      // NFTを作成する前に、コントラクトが正常に動作しているかチェック
+      const mintingEnabled = await contract.mintingEnabled();    // ミント機能が有効か
+      const mintPrice = await contract.mintPrice();              // ミント価格（ETH）
+      const currentSupply = await contract.totalSupply();        // 現在の発行済みNFT数
+      const maxSupply = await contract.MAX_SUPPLY();             // 最大発行可能数
+      const currentTokenId = await contract.getCurrentTokenId(); // 次に発行されるトークンID
+      const contractBalance = await contract.getContractBalance(); // コントラクトの残高
 
+      // 🖥️ デバッグ情報をコンソールに出力（開発者が状況を把握するため）
       console.log('📊 コントラクト状態詳細確認:');
       console.log('  ミント機能:', mintingEnabled ? '有効' : '無効');
       console.log('  ミント価格:', ethers.formatEther(mintPrice), 'ETH');
@@ -84,19 +121,24 @@ const useNftMinting = () => {
       console.log('  送信ETH:', ethers.formatEther(mintPrice), 'ETH');
       console.log('  ユーザーアドレス:', currentAccount);
 
-      // ミント前の検証
+      // 🔍 ステップ4：ミント前の検証
+      // NFTを作成する前に、条件が満たされているかチェック
+
+      // ミント機能が有効かチェック
       if (!mintingEnabled) {
         throw new Error('ミント機能が無効になっています');
       }
 
+      // 最大発行数に達していないかチェック
       if (currentTokenId > maxSupply) {
         throw new Error(`最大発行数に達しています (${currentTokenId} > ${maxSupply})`);
       }
 
-      // ユーザーの残高確認
+      // 💰 ユーザーのETH残高確認
       const userBalance = await provider.getBalance(currentAccount);
       console.log('  ユーザー残高:', ethers.formatEther(userBalance), 'ETH');
 
+      // 残高が足りているかチェック
       if (userBalance < mintPrice) {
         throw new Error('ETH残高が不足しています');
       }

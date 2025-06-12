@@ -1,16 +1,48 @@
-import React from 'react';
-import { Button, Alert } from '@mui/material';
+// Reactライブラリをインポート
+// Material-UIのコンポーネントをインポート
+import { Alert, Button } from '@mui/material';
+// 画像アイコンをインポート
 import ImageLogo from '../image.svg';
 
 /**
- * ファイルアップロードコンポーネント
- * 責務：
- * - ファイル選択UI
- * - ドラッグ&ドロップエリア
- * - ファイル情報表示
- * - バリデーションエラー表示
+ * 📁 ファイルアップロードコンポーネント
+ *
+ * 【このコンポーネントの役割】
+ * このコンポーネントは「ファイルの受付係」のような役割を果たします。
+ * ユーザーが画像ファイルを選択・アップロードできるインターフェースを提供し、
+ * ドラッグ&ドロップやファイル選択ボタンなど、複数の方法でファイルを受け取ります。
+ *
+ * 【主な機能】
+ * 1. ドラッグ&ドロップエリア - ファイルを直感的にドロップ
+ * 2. ファイル選択ボタン - 従来の方法でファイル選択
+ * 3. ファイル情報表示 - 選択されたファイルの詳細表示
+ * 4. バリデーション - ファイル形式・サイズのチェック
+ * 5. エラー表示 - 問題がある場合の分かりやすい通知
+ * 6. NFT作成ボタン - 選択後の次のステップへの導線
+ *
+ * 【ユーザビリティの配慮】
+ * - 複数の操作方法を提供（ドラッグ&ドロップ + ボタン）
+ * - 視覚的フィードバック（ホバー効果、状態変化）
+ * - 分かりやすいエラーメッセージ
+ * - 処理中の状態表示
+ *
+ * 【初心者向け解説】
+ * - props = 親コンポーネントから受け取る設定値や関数
+ * - onDragOver/onDrop = ドラッグ&ドロップ時のイベント処理
+ * - disabled = ボタンやフィールドを無効化する属性
+ *
+ * @param {File} selectedFile - 選択されたファイル
+ * @param {string} error - エラーメッセージ
+ * @param {boolean} uploading - アップロード中かどうか
+ * @param {boolean} isPending - 処理中かどうか
+ * @param {function} onFileSelect - ファイル選択時の処理関数
+ * @param {function} onDragOver - ドラッグオーバー時の処理関数
+ * @param {function} onDrop - ファイルドロップ時の処理関数
+ * @param {function} onMintClick - NFT作成ボタンクリック時の処理関数
+ * @param {string} currentAccount - 現在接続中のウォレットアドレス
+ * @param {string} networkError - ネットワーク関連のエラーメッセージ
  */
-const FileUpload = ({ 
+const FileUpload = ({
   selectedFile,
   error,
   uploading,
@@ -24,15 +56,15 @@ const FileUpload = ({
 }) => {
   return (
     <div style={{ textAlign: 'center' }}>
-      {/* ファイル選択エラー */}
+      {/* ❌ ファイル選択エラーの表示 */}
       {error && (
         <Alert severity="error" style={{ margin: "10px 0" }}>
           {error}
         </Alert>
       )}
 
-      {/* ドラッグ&ドロップエリア */}
-      <div 
+      {/* 📦 ドラッグ&ドロップエリア */}
+      <div
         className="nftUplodeBox"
         onDragOver={onDragOver}
         onDrop={onDrop}
@@ -46,23 +78,26 @@ const FileUpload = ({
         }}
       >
         <div className="imageLogoAndText">
-          <img 
-            src={ImageLogo} 
-            alt="imagelogo" 
-            style={{ 
+          {/* 🖼️ 画像アイコン */}
+          <img
+            src={ImageLogo}
+            alt="imagelogo"
+            style={{
               opacity: uploading || isPending ? 0.5 : 1,
               width: '64px',
               height: '64px'
-            }} 
+            }}
           />
-          <p style={{ 
+          {/* 📝 案内テキスト */}
+          <p style={{
             marginBottom: '0px',
             color: uploading || isPending ? '#999' : '#666'
           }}>
             {uploading || isPending ? 'アップロード中...' : 'ここにドラッグ＆ドロップしてね'}
           </p>
         </div>
-        
+
+        {/* 👻 非表示のファイル入力フィールド（ドラッグ&ドロップエリア全体をクリック可能にする） */}
         <input
           className="nftUploadInput"
           name="imageURL"
@@ -81,13 +116,14 @@ const FileUpload = ({
           }}
         />
       </div>
-      
+
+      {/* 🔗 区切り線テキスト */}
       <p style={{ margin: '20px 0 10px 0', color: '#666' }}>または</p>
-      
-      {/* ファイル選択ボタン */}
-      <Button 
-        variant="contained" 
-        component="label" 
+
+      {/* 🔘 ファイル選択ボタン（従来の方法） */}
+      <Button
+        variant="contained"
+        component="label"
         disabled={uploading || isPending}
         style={{
           marginBottom: '20px',
@@ -98,6 +134,7 @@ const FileUpload = ({
         }}
       >
         ファイルを選択
+        {/* 👻 非表示のファイル入力フィールド（ボタン内に埋め込み） */}
         <input
           type="file"
           accept=".jpg,.jpeg,.png,.gif,.svg"
@@ -107,33 +144,37 @@ const FileUpload = ({
         />
       </Button>
 
-      {/* 選択されたファイル情報 */}
+      {/* 📋 選択されたファイル情報表示エリア */}
       {selectedFile && (
-        <div style={{ 
-          margin: "20px 0", 
+        <div style={{
+          margin: "20px 0",
           padding: "15px",
           backgroundColor: "#f8f9fa",
           borderRadius: "8px",
           border: "1px solid #dee2e6"
         }}>
+          {/* 📁 ファイル情報ヘッダー */}
           <div style={{ marginBottom: '10px' }}>
             <strong>📁 選択されたファイル:</strong>
           </div>
-          
+
+          {/* 📝 ファイル名表示 */}
           <div style={{ marginBottom: '5px' }}>
             <span style={{ fontWeight: 'bold' }}>{selectedFile.name}</span>
           </div>
-          
-          <div style={{ 
-            fontSize: '0.9em', 
+
+          {/* 📊 ファイルサイズ表示 */}
+          <div style={{
+            fontSize: '0.9em',
             color: '#666',
             marginBottom: '15px'
           }}>
             サイズ: {Math.round(selectedFile.size / 1024)} KB
           </div>
-          
-          <Button 
-            variant="contained" 
+
+          {/* 🎨 NFT作成ボタン（メインアクション） */}
+          <Button
+            variant="contained"
             color="primary"
             onClick={onMintClick}
             disabled={uploading || !currentAccount || !!networkError || isPending}
@@ -151,8 +192,9 @@ const FileUpload = ({
             )}
           </Button>
 
+          {/* ⚠️ 前提条件エラーメッセージ */}
           {(!currentAccount || networkError) && (
-            <div style={{ 
+            <div style={{
               marginTop: '10px',
               fontSize: '0.8em',
               color: '#ff6b6b'
@@ -164,8 +206,8 @@ const FileUpload = ({
         </div>
       )}
 
-      {/* ファイル形式の説明 */}
-      <div style={{ 
+      {/* 📖 ファイル形式の説明・制限事項 */}
+      <div style={{
         marginTop: '20px',
         fontSize: '0.8em',
         color: '#999',
