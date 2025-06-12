@@ -43,23 +43,90 @@ const initializePinata = async () => {
     try {
       console.log('🚀 Pinata: 実際のIPFS初期化を開始します...');
 
-      // 新しいPinata Web3 SDK を使用
-      const { PinataSDK } = await import('pinata-web3');
-      const pinata = new PinataSDK({
-        pinataJwt: process.env.REACT_APP_PINATA_API_KEY,
-        pinataGateway: "gateway.pinata.cloud"
-      });
+      // Pinata HTTP API クライアント（SDKなし）
+      const pinataAPI = {
+        jwt: process.env.REACT_APP_PINATA_API_KEY,
+        baseURL: 'https://api.pinata.cloud',
 
-      console.log('💻 Pinata: クライアント作成完了');
+        // 認証テスト
+        async testAuthentication() {
+          const response = await fetch(`${this.baseURL}/data/testAuthentication`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${this.jwt}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`Authentication failed: ${response.status}`);
+          }
+
+          return await response.json();
+        },
+
+        // ファイルアップロード
+        async pinFileToIPFS(file, options = {}) {
+          const formData = new FormData();
+          formData.append('file', file);
+
+          if (options.pinataMetadata) {
+            formData.append('pinataMetadata', JSON.stringify(options.pinataMetadata));
+          }
+
+          if (options.pinataOptions) {
+            formData.append('pinataOptions', JSON.stringify(options.pinataOptions));
+          }
+
+          const response = await fetch(`${this.baseURL}/pinning/pinFileToIPFS`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.jwt}`
+            },
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error(`File upload failed: ${response.status}`);
+          }
+
+          return await response.json();
+        },
+
+        // JSONアップロード
+        async pinJSONToIPFS(jsonObject, options = {}) {
+          const body = {
+            pinataContent: jsonObject,
+            pinataMetadata: options.pinataMetadata || {},
+            pinataOptions: options.pinataOptions || {}
+          };
+
+          const response = await fetch(`${this.baseURL}/pinning/pinJSONToIPFS`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.jwt}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+          });
+
+          if (!response.ok) {
+            throw new Error(`JSON upload failed: ${response.status}`);
+          }
+
+          return await response.json();
+        }
+      };
+
+      console.log('💻 Pinata: HTTP APIクライアント作成完了');
 
       // 接続テスト
       console.log('🔐 Pinata: 接続テスト中...');
       try {
-        await pinata.testAuthentication();
+        await pinataAPI.testAuthentication();
         console.log('✅ Pinata: 認証成功');
 
-        pinataClient = pinata;
-        return pinata;
+        pinataClient = pinataAPI;
+        return pinataAPI;
       } catch (authError) {
         console.log('❌ Pinata: 認証失敗');
         console.error('Auth error:', authError);
@@ -145,16 +212,22 @@ const realUploadToIPFS = async (file) => {
 
     console.log('📤 Starting file upload...');
 
-    // 新しいPinata Web3 SDKでのアップロード
-    const result = await client.upload.file(file).addMetadata({
-      name: `nft-image-${Date.now()}-${file.name}`,
-      keyValues: {
-        type: 'nft-image',
-        originalName: file.name,
-        uploadDate: new Date().toISOString()
+    // Pinata HTTP APIでのアップロード
+    const options = {
+      pinataMetadata: {
+        name: `nft-image-${Date.now()}-${file.name}`,
+        keyvalues: {
+          type: 'nft-image',
+          originalName: file.name,
+          uploadDate: new Date().toISOString()
+        }
+      },
+      pinataOptions: {
+        cidVersion: 0
       }
-    });
+    };
 
+    const result = await client.pinFileToIPFS(file, options);
     const cidString = result.IpfsHash;
 
     // CID検証
@@ -242,16 +315,22 @@ const realUploadMetadata = async (metadata) => {
 
     console.log('📤 Starting metadata upload...');
 
-    // 新しいPinata Web3 SDKでのJSONアップロード
-    const result = await client.upload.json(metadata).addMetadata({
-      name: `nft-metadata-${Date.now()}`,
-      keyValues: {
-        type: 'nft-metadata',
-        nftName: metadata.name,
-        uploadDate: new Date().toISOString()
+    // Pinata HTTP APIでのJSONアップロード
+    const options = {
+      pinataMetadata: {
+        name: `nft-metadata-${Date.now()}`,
+        keyvalues: {
+          type: 'nft-metadata',
+          nftName: metadata.name,
+          uploadDate: new Date().toISOString()
+        }
+      },
+      pinataOptions: {
+        cidVersion: 0
       }
-    });
+    };
 
+    const result = await client.pinJSONToIPFS(metadata, options);
     const cidString = result.IpfsHash;
 
     // CID検証

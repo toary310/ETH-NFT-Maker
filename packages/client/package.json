@@ -9,7 +9,7 @@
     "@mui/material": "^5.15.15",
     "@mui/styled-engine-sc": "^6.0.0-alpha.18",
     "ethers": "^6.11.1",
-    "pinata-web3": "^0.5.4",
+
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-scripts": "5.0.1",
