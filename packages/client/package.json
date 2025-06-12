@@ -21,13 +21,8 @@
   "homepage": ".",
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "rules": {
-      "no-unused-vars": "warn",
-      "no-console": "off"
-    }
+      "react-app"
+    ]
   },
   "browserslist": {
     "production": [
